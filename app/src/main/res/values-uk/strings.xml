@@ -300,4 +300,13 @@
     <string name="kids_blocked">«%s» тут недоступний</string>
     <string name="kids_warn">Лишилося %d хв</string>
     <string name="kids_warn_break">Перерва за %d хв</string>
+    <!-- Optional action for an already installed Clash Meta client. -->
+    <string name="cc_shortcuts">Швидкі дії</string>
+    <string name="cc_clash">Clash Meta</string>
+    <string name="cc_clash_toggle">Перемкнути</string>
+    <string name="st_clash_shortcut">Кнопка Clash Meta</string>
+    <string name="st_clash_shortcut_hint">Показувати дію в Центрі керування. Спершу налаштуйте Clash Meta та дозвольте VPN у застосунку.</string>
+    <string name="cc_clash_requested">Запит надіслано. Якщо нічого не сталося, перевірте профіль і дозвіл VPN у Clash Meta.</string>
+    <string name="cc_clash_unavailable">Зовнішнє керування Clash Meta недоступне. Перевірте встановлення та ввімкнення офіційного застосунку.</string>
+    <string name="cc_clash_failed">Не вдалося керувати Clash Meta. Перевірте налаштування застосунку.</string>
 </resources>

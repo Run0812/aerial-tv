@@ -300,4 +300,13 @@
     <string name="kids_blocked">«%s» мұнда қолжетімсіз</string>
     <string name="kids_warn">%d мин қалды</string>
     <string name="kids_warn_break">%d минуттан кейін үзіліс</string>
+    <!-- Optional action for an already installed Clash Meta client. -->
+    <string name="cc_shortcuts">Жылдам әрекеттер</string>
+    <string name="cc_clash">Clash Meta</string>
+    <string name="cc_clash_toggle">Ауыстыру</string>
+    <string name="st_clash_shortcut">Clash Meta түймесі</string>
+    <string name="st_clash_shortcut_hint">Басқару орталығында әрекетті көрсету. Алдымен Clash Meta қолданбасын баптап, VPN қосылымына рұқсат беріңіз.</string>
+    <string name="cc_clash_requested">Сұрау жіберілді. Өзгеріс болмаса, Clash Meta профилін және VPN рұқсатын тексеріңіз.</string>
+    <string name="cc_clash_unavailable">Clash Meta сыртқы басқаруы қолжетімсіз. Ресми қолданбаның орнатылғанын және қосылғанын тексеріңіз.</string>
+    <string name="cc_clash_failed">Clash Meta басқарылмады. Қолданба параметрлерін тексеріңіз.</string>
 </resources>

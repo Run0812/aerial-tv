@@ -307,4 +307,13 @@
     <string name="kids_blocked">「%s」不在这个模式里</string>
     <string name="kids_warn">还能看 %d 分钟</string>
     <string name="kids_warn_break">%d 分钟后休息一下</string>
+    <!-- Optional action for an already installed Clash Meta client. -->
+    <string name="cc_shortcuts">快捷操作</string>
+    <string name="cc_clash">Clash Meta</string>
+    <string name="cc_clash_toggle">切换</string>
+    <string name="st_clash_shortcut">Clash Meta 快捷按钮</string>
+    <string name="st_clash_shortcut_hint">在控制中心显示快捷操作。请先在 Clash Meta 中选好配置并允许 VPN 连接。</string>
+    <string name="cc_clash_requested">已请求切换。如无效，请打开 Clash Meta 检查配置和 VPN 授权。</string>
+    <string name="cc_clash_unavailable">无法使用 Clash Meta 外部控制。请确认已安装并启用官方客户端。</string>
+    <string name="cc_clash_failed">无法控制 Clash Meta，请打开客户端检查设置。</string>
 </resources>

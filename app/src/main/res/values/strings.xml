@@ -308,4 +308,13 @@
     <string name="kids_blocked">%s is not allowed here</string>
     <string name="kids_warn">%d min of TV left</string>
     <string name="kids_warn_break">A break in %d min</string>
+    <!-- Optional action for an already installed Clash Meta client. -->
+    <string name="cc_shortcuts">Shortcuts</string>
+    <string name="cc_clash">Clash Meta</string>
+    <string name="cc_clash_toggle">Toggle</string>
+    <string name="st_clash_shortcut">Clash Meta shortcut</string>
+    <string name="st_clash_shortcut_hint">Show a Control Center action. Configure Clash Meta and approve its VPN connection in the client first.</string>
+    <string name="cc_clash_requested">Toggle requested. If nothing happens, open Clash Meta to check its profile and VPN approval.</string>
+    <string name="cc_clash_unavailable">Clash Meta external control is unavailable. Check that the official client is installed and enabled.</string>
+    <string name="cc_clash_failed">Unable to control Clash Meta. Open the client and check its settings.</string>
 </resources>

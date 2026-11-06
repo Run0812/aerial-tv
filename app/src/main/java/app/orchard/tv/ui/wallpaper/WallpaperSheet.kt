@@ -250,6 +250,14 @@ fun WallpaperSheet(
                 Spacer(Modifier.height(10.dp))
                 Group { note ->
                     Choices(
+                        R.string.st_clash_shortcut, stringResource(R.string.st_clash_shortcut_hint), note,
+                        listOf(true to R.string.st_on, false to R.string.st_off),
+                        AerialSettings.clashShortcut, AerialSettings::chooseClashShortcut, first = true,
+                    )
+                }
+                Spacer(Modifier.height(10.dp))
+                Group { note ->
+                    Choices(
                         R.string.st_focus_style,
                         stringResource(if (AerialSettings.focusStyle == FocusStyle.HighContrast) R.string.st_focus_high_hint else R.string.st_focus_standard_hint),
                         note,

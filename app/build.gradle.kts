@@ -21,6 +21,14 @@ android {
         targetSdk = 34
         versionCode = 118
         versionName = "1.86"
+        manifestPlaceholders["aerialLabel"] = "@string/app_name"
+        // Fork-only test builds coexist with the official app and keep its data intact.
+        if (project.hasProperty("shortcutTest")) {
+            applicationIdSuffix = ".shortcuts"
+            versionNameSuffix = "-shortcuts-test"
+            resValue("string", "shortcut_test_name", "Aerial Shortcuts Test")
+            manifestPlaceholders["aerialLabel"] = "@string/shortcut_test_name"
+        }
         // `./gradlew -Pdiag ...`: a build for one reporter's TV whose logcat shows no app lines;
         // see system/DiagLog.kt.
         val diag = project.hasProperty("diag")

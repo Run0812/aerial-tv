@@ -96,6 +96,7 @@ import app.orchard.tv.settings.Restricted
 import app.orchard.tv.settings.RestrictedKind
 import app.orchard.tv.ui.home.kidsTimeLine
 import app.orchard.tv.system.HomeStatus
+import app.orchard.tv.system.ClashShortcut
 import app.orchard.tv.system.LaunchFallback
 import app.orchard.tv.system.NetKind
 import app.orchard.tv.system.SourceKind
@@ -238,6 +239,7 @@ private fun KidsPage(vm: HomeViewModel, now: LocalDateTime, takeFocus: Boolean) 
         VolumeRow(vm, first)
         Spacer(Modifier.height(6.dp))
         BrightnessRow(vm)
+
         Spacer(Modifier.height(6.dp))
         MenuRow(
             Glyph.Shield,
@@ -272,7 +274,7 @@ private fun MainPage(vm: HomeViewModel, now: LocalDateTime, takeFocus: Boolean, 
         runCatching { first.requestFocus() }
     }
 
-    Column {
+    Column(Modifier.heightIn(max = 460.dp).verticalScroll(rememberScrollState())) {
         Row(verticalAlignment = Alignment.Bottom) {
             Column(Modifier.weight(1f)) {
                 BasicText(timeText(now), style = Type.SmallClock.copy(fontSize = Type.LargeTitle.fontSize * 1.05f))
@@ -336,6 +338,28 @@ private fun MainPage(vm: HomeViewModel, now: LocalDateTime, takeFocus: Boolean, 
         VolumeRow(vm, cameFrom)
         Spacer(Modifier.height(6.dp))
         BrightnessRow(vm)
+
+        if (AerialSettings.clashShortcut) {
+            Spacer(Modifier.height(8.dp))
+            BasicText(
+                stringResource(R.string.cc_shortcuts), style = Type.Caption,
+                modifier = Modifier.padding(start = 14.dp, bottom = 2.dp),
+            )
+            MenuRow(
+                Glyph.Switches, stringResource(R.string.cc_clash),
+                trailing = stringResource(R.string.cc_clash_toggle),
+                onClick = {
+                    vm.whenUnlocked {
+                        val message = when (ClashShortcut.toggle(context)) {
+                            ClashShortcut.Result.Sent -> R.string.cc_clash_requested
+                            ClashShortcut.Result.Unavailable -> R.string.cc_clash_unavailable
+                            ClashShortcut.Result.Failed -> R.string.cc_clash_failed
+                        }
+                        vm.notify(context.getString(message), Glyph.Switches)
+                    }
+                },
+            )
+        }
 
         Spacer(Modifier.height(6.dp))
         // A parent left Kids and Elders mode: one press back into it, no PIN.
