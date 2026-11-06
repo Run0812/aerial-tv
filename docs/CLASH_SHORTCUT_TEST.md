@@ -21,15 +21,14 @@
 
 可用 U 盘安装 APK。使用 ADB 且电视为 Android 9 及以上时，按项目规范同时安装 APK 内的 dex metadata：
 
+先从两份 `.dm` 中选出与系统匹配的那份，复制或重命名为 **`aerial-shortcuts-test.dm`**，与 APK 主文件名保持一致：Android 12 及以上选 `api31.dm`，Android 9–11 选 `api28.dm`。
+
 ```text
 # 先连接自己的电视，示例地址须替换
 adb connect <电视IP>:5555
 
-# Android 12 及以上
-adb install-multiple -r aerial-shortcuts-test.apk aerial-shortcuts-test-api31.dm
-
-# Android 9–11（二选一）
-adb install-multiple -r aerial-shortcuts-test.apk aerial-shortcuts-test-api28.dm
+# Android 9 及以上（先按上文选好并重命名 .dm）
+adb install-multiple -r aerial-shortcuts-test.apk aerial-shortcuts-test.dm
 
 # Android 5–8
 adb install -r aerial-shortcuts-test.apk
@@ -38,6 +37,8 @@ adb shell am start -n app.orchard.tv.shortcuts/app.orchard.tv.MainActivity
 ```
 
 只有无线调试的电视需要按原项目说明先配对。签名密钥固定保存于 Fork 的 Actions Secret，后续构建可覆盖此测试版；不能覆盖官方包。
+
+TCL 若返回 `INSTALL_FAILED_VERIFICATION_FAILURE`，后台安装未成功；可改用电视已有的多屏互动安装入口，由用户确认。不要直接运行原项目完整安装脚本来装这个测试包，那会配置官方桌面及守护服务。
 
 ## 验收清单
 
