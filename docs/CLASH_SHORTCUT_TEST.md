@@ -4,7 +4,7 @@
 
 ## 使用
 
-1. 电视上已有 Clash Meta for Android，包名为 `com.github.metacubex.clash.meta`。
+1. 电视上已有 Clash Meta for Android：支持 `com.github.metacubex.clash.meta` 和 Alpha 的 `com.github.metacubex.clash.alpha`。两者都安装时优先稳定版。
 2. 在 Clash 内选好配置，手动连接一次，完成系统 VPN 授权。
 3. 安装并从应用列表打开 **Aerial Shortcuts Test**。
 4. 控制中心 → 个性化 → **Clash Meta 快捷按钮 → 开**。

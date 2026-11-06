@@ -5,6 +5,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
+import android.content.IntentFilter
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -17,20 +18,42 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [21, 34])
+@Config(sdk = [26, 34])
 class ClashShortcutTest {
     private val context: Context = RuntimeEnvironment.getApplication()
     private val component = ComponentName("com.github.metacubex.clash.meta", "com.github.kr328.clash.ExternalControlActivity")
 
-    private fun installClient() = shadowOf(context.packageManager).addActivityIfNotPresent(component).apply {
+    private fun installClient(target: ComponentName = component) = shadowOf(context.packageManager).addActivityIfNotPresent(target).apply {
         exported = true
         enabled = true
         applicationInfo.enabled = true
+        shadowOf(context.packageManager).addIntentFilterForActivity(
+            target, IntentFilter("com.github.metacubex.clash.meta.action.TOGGLE_CLASH"),
+        )
     }
 
     @Test
     fun absentClientDoesNotLaunchAnything() {
         assertEquals(ClashShortcut.Result.Unavailable, ClashShortcut.toggle(context))
+        assertNull(shadowOf(RuntimeEnvironment.getApplication()).nextStartedActivity)
+    }
+
+    @Test
+    fun alphaClientUsesItsOwnPackageAndTheMetaActionNamespace() {
+        val alpha = ComponentName("com.github.metacubex.clash.alpha", component.className)
+        installClient(alpha)
+        assertEquals(ClashShortcut.Result.Sent, ClashShortcut.toggle(context))
+        val started = shadowOf(RuntimeEnvironment.getApplication()).nextStartedActivity
+        assertEquals(alpha, started.component)
+        assertEquals("com.github.metacubex.clash.meta.action.TOGGLE_CLASH", started.action)
+    }
+
+    @Test
+    fun stableClientTakesPriorityWhenBothAreInstalled() {
+        installClient(ComponentName("com.github.metacubex.clash.alpha", component.className))
+        installClient()
+        assertEquals(ClashShortcut.Result.Sent, ClashShortcut.toggle(context))
+        assertEquals(component, shadowOf(RuntimeEnvironment.getApplication()).nextStartedActivity.component)
         assertNull(shadowOf(RuntimeEnvironment.getApplication()).nextStartedActivity)
     }
 
