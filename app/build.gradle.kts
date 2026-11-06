@@ -55,6 +55,12 @@ android {
         }
     }
 
+    if (project.hasProperty("shortcutTest")) {
+        // Remove background integration too: account/sync XML uses the official account type,
+        // which would otherwise overlap with an installed official Aerial even under a new ID.
+        sourceSets.getByName("guard").manifest.srcFile("src/shortcutTest/AndroidManifest.xml")
+    }
+
     // The TVs only accept updates signed with the key Aerial was first installed with. That key
     // lives outside version control in local/ (see docs/HANDOFF.md); without it the build falls
     // back to this machine's debug key, which installs fresh but cannot update existing copies.

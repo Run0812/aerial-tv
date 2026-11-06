@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- A manually opened test app only; no background ownership of the TV. -->
+    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" tools:node="remove" />
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" tools:node="remove" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" tools:node="remove" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" tools:node="remove" />
+    <uses-permission android:name="android.permission.READ_SYNC_SETTINGS" tools:node="remove" />
+    <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" tools:node="remove" />
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" tools:node="remove" />
+    <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS" tools:node="remove" />
+    <application>
+        <receiver android:name="app.orchard.tv.guard.BootReceiver" tools:node="remove" />
+        <receiver android:name="app.orchard.tv.guard.ConfigReceiver" tools:node="remove" />
+        <service android:name="app.orchard.tv.dream.AerialDream" tools:node="remove" />
+        <service android:name="app.orchard.tv.guard.RevivalListener" tools:node="remove" />
+        <service android:name="app.orchard.tv.guard.RevivalSyncService" tools:node="remove" />
+        <service android:name="app.orchard.tv.guard.RevivalAccountService" tools:node="remove" />
+        <service android:name="app.orchard.tv.guard.HomeGuardService" tools:node="remove" />
+    </application>
+</manifest>
