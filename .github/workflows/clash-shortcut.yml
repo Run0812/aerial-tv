@@ -52,6 +52,27 @@ jobs:
         run: |
           mkdir -p artifacts
           APK=app/build/outputs/apk/guard/release/app-guard-release.apk
+          apkanalyzer manifest print "$APK" > artifacts/AndroidManifest.xml
+          python3 - <<'PY'
+          import xml.etree.ElementTree as ET
+          root = ET.parse('artifacts/AndroidManifest.xml').getroot()
+          a = '{http://schemas.android.com/apk/res/android}'
+          assert root.get('package') == 'app.orchard.tv.shortcuts', 'Unexpected application ID'
+          forbidden = {'WRITE_SECURE_SETTINGS', 'WRITE_SETTINGS', 'SYSTEM_ALERT_WINDOW',
+                       'RECEIVE_BOOT_COMPLETED', 'READ_SYNC_SETTINGS', 'WRITE_SYNC_SETTINGS',
+                       'GET_ACCOUNTS', 'AUTHENTICATE_ACCOUNTS'}
+          for item in root.findall('uses-permission'):
+              assert item.get(a + 'name').split('.')[-1] not in forbidden, 'System integration permission present'
+          app = root.find('application')
+          for tag in ('service', 'receiver'):
+              for item in app.findall(tag):
+                  assert not item.get(a + 'name', '').startswith('app.orchard.tv.guard.'), 'Guard component present'
+                  assert item.get(a + 'name') != 'app.orchard.tv.dream.AerialDream', 'System dream present'
+          for item in app.iter('category'):
+              assert item.get(a + 'name') not in {'android.intent.category.HOME', 'android.intent.category.HOME.CC'}, 'HOME handler present'
+          assert app.find('provider').get(a + 'authorities') == 'app.orchard.tv.shortcuts.files', 'Shared FileProvider authority'
+          print('Test APK isolation checks passed')
+          PY
           cp "$APK" artifacts/aerial-shortcuts-test.apk
           unzip -p "$APK" assets/aerial-dm/28.dm > artifacts/aerial-shortcuts-test-api28.dm
           unzip -p "$APK" assets/aerial-dm/31.dm > artifacts/aerial-shortcuts-test-api31.dm
