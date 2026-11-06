@@ -13,6 +13,8 @@
 
 按钮发送官方 `TOGGLE_CLASH` Intent，由 Clash 决定开启还是关闭。发送成功不代表连接成功；配置和首次 VPN 授权仍由客户端完成。系统 VPN 标识可能属于其他应用，不能作为 Clash 独立状态显示。
 
+动作前缀使用客户端实际包名：稳定版为 `com.github.metacubex.clash.meta.action`，Alpha 为 `com.github.metacubex.clash.alpha.action`。2.11.23.Alpha 的 Manifest 仍声明稳定版前缀，但运行时代码按 Alpha 包名匹配；在 Android 11 上已确认应显式指定组件并使用 Alpha 动作。该旧 Alpha 在其他 Android 版本上的兼容性尚未验证。
+
 测试版包名 `app.orchard.tv.shortcuts`，与官方版共存，设置独立。采用 guard 变体，不声明 HOME，也不需要将其设为默认桌面。先作为普通应用测试即可。若官方 Aerial 正在运行，主页键会回到官方版，再从应用列表打开测试版即可。
 
 测试构建从 Manifest 中移除了桌面守护、通知监听、同步账户、开机接管和系统屏保组件，以及修改系统设置和悬浮窗的权限；不会与官方版注册相同的同步账户。这次验证只需要普通应用权限。不要将测试版设为开机启动或系统桌面。测试包不提供应用内升级，后续版本从 Actions 下载覆盖安装。

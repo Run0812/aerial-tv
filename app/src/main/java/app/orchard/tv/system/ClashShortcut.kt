@@ -6,10 +6,10 @@ import android.content.Intent
 
 /** Only controls an already installed client. No SDK, shell commands or network access. */
 internal object ClashShortcut {
-    // The Alpha build uses a different package but the same documented action namespace.
+    // The runtime handler builds its action from its own application package. Some Alpha builds
+    // still declare the stable action in their manifest (verified on 2.11.23.Alpha, Android 11).
     private val PACKAGES = listOf("com.github.metacubex.clash.meta", "com.github.metacubex.clash.alpha")
     private const val ACTIVITY = "com.github.kr328.clash.ExternalControlActivity"
-    private const val TOGGLE = "com.github.metacubex.clash.meta.action.TOGGLE_CLASH"
 
     enum class Result { Sent, Unavailable, Failed }
 
@@ -17,10 +17,17 @@ internal object ClashShortcut {
     // to another app, so it must never determine whether we send START or STOP here.
     fun toggle(context: Context): Result {
         val intent = PACKAGES.asSequence().map { pkg ->
-            Intent(TOGGLE).setComponent(ComponentName(pkg, ACTIVITY))
+            Intent("$pkg.action.TOGGLE_CLASH").setComponent(ComponentName(pkg, ACTIVITY))
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }.firstOrNull { candidate ->
-            val target = context.packageManager.resolveActivity(candidate, 0)?.activityInfo
+            // It is an explicit component call: validate the component, not the stale filter.
+            val target = try {
+                context.packageManager.getActivityInfo(candidate.component!!, 0)
+            } catch (_: android.content.pm.PackageManager.NameNotFoundException) {
+                null
+            } catch (_: SecurityException) {
+                null
+            }
             target != null && target.exported && target.enabled && target.applicationInfo.enabled
         } ?: return Result.Unavailable
         return try {

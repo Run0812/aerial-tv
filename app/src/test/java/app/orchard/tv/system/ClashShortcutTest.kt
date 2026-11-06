@@ -39,13 +39,13 @@ class ClashShortcutTest {
     }
 
     @Test
-    fun alphaClientUsesItsOwnPackageAndTheMetaActionNamespace() {
+    fun alphaClientUsesRuntimePackageDespiteItsStaleStableManifestFilter() {
         val alpha = ComponentName("com.github.metacubex.clash.alpha", component.className)
         installClient(alpha)
         assertEquals(ClashShortcut.Result.Sent, ClashShortcut.toggle(context))
         val started = shadowOf(RuntimeEnvironment.getApplication()).nextStartedActivity
         assertEquals(alpha, started.component)
-        assertEquals("com.github.metacubex.clash.meta.action.TOGGLE_CLASH", started.action)
+        assertEquals("com.github.metacubex.clash.alpha.action.TOGGLE_CLASH", started.action)
     }
 
     @Test
