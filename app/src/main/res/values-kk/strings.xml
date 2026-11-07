@@ -347,4 +347,15 @@
     <string name="qc_hidden">Жасырылған</string>
     <string name="qc_app_pick">Орнатылған қолданбаны таңдаңыз</string>
     <string name="qc_pin">Ата-ана PIN коды</string>
+    <string name="qc_network_settings">Желі баптаулары</string>
+    <string name="qc_bluetooth_settings">Bluetooth баптаулары</string>
+    <string name="qc_group_system">Қолжетімді түймелер</string>
+    <string name="qc_group_apps">Қолданбаны ашу</string>
+    <string name="qc_arrange_hint">Атауын өзгерту, жылжыту, жасыру немесе алып тастау үшін түймені таңдаңыз.</string>
+    <string name="qc_rename">Атауын өзгерту</string>
+    <string name="qc_remove">Алып тастау</string>
+    <string name="qc_done">Дайын</string>
+    <string name="qc_reorder">Ретін өзгерту үшін сүйреңіз</string>
+    <string name="qc_added">Қосылды</string>
+    <string name="qc_exists">Бұл түйме бұрын қосылған.</string>
 </resources>

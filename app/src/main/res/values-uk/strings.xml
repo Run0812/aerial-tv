@@ -347,4 +347,15 @@
     <string name="qc_hidden">Приховано</string>
     <string name="qc_app_pick">Виберіть застосунок</string>
     <string name="qc_pin">Батьківський PIN</string>
+    <string name="qc_network_settings">Налаштування мережі</string>
+    <string name="qc_bluetooth_settings">Налаштування Bluetooth</string>
+    <string name="qc_group_system">Доступні кнопки</string>
+    <string name="qc_group_apps">Відкрити застосунок</string>
+    <string name="qc_arrange_hint">Виберіть плитку, щоб перейменувати, перемістити, приховати чи прибрати.</string>
+    <string name="qc_rename">Перейменувати</string>
+    <string name="qc_remove">Прибрати</string>
+    <string name="qc_done">Готово</string>
+    <string name="qc_reorder">Перетягнути</string>
+    <string name="qc_added">Додано</string>
+    <string name="qc_exists">Цю кнопку вже додано.</string>
 </resources>

@@ -354,4 +354,15 @@
     <string name="qc_hidden">已隐藏</string>
     <string name="qc_app_pick">选择已安装应用</string>
     <string name="qc_pin">家长密码</string>
+    <string name="qc_network_settings">网络设置</string>
+    <string name="qc_bluetooth_settings">蓝牙设置</string>
+    <string name="qc_group_system">可用控制</string>
+    <string name="qc_group_apps">打开应用</string>
+    <string name="qc_arrange_hint">选择图标可改名、移动、隐藏或移除。</string>
+    <string name="qc_rename">改名</string>
+    <string name="qc_remove">移除</string>
+    <string name="qc_done">完成</string>
+    <string name="qc_reorder">拖动排序</string>
+    <string name="qc_added">已添加</string>
+    <string name="qc_exists">已添加此控制。</string>
 </resources>

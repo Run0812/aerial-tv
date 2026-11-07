@@ -68,10 +68,24 @@ class QuickControlsTest {
 
     @Test fun capsTheListAndDoesNotReplaceAnExistingId() {
         val store = QuickControlStore(context)
-        repeat(QuickControlStore.MAX_ITEMS) { assertNull(store.change("add", value = QuickAction(title = "Button $it"))) }
-        assertEquals("limit", store.change("add", value = QuickAction(title = "One too many")))
+        repeat(QuickControlStore.MAX_ITEMS) { assertNull(store.change("add", value = QuickAction(title = "Button $it", kind = "app", pkg = "org.example.app$it"))) }
+        assertEquals("limit", store.change("add", value = QuickAction(title = "One too many", kind = "system", action = "mute")))
         val first = store.items.first()
         assertEquals("invalid", store.change("add", value = first.copy(title = "Duplicate")))
         assertEquals("Button 0", store.items.first().title)
+    }
+
+    @Test fun draggingToAnAbsolutePositionPersistsAndRejectsStaleOrInvalidDrops() {
+        val store = QuickControlStore(context)
+        val actions = listOf("mute", "network", "settings").map { QuickAction(title = it, kind = "system", action = it) }
+        actions.forEach { assertNull(store.change("add", value = it)) }
+        val revision = store.revision
+        assertNull(store.change("place", actions.first().id, delta = 2))
+        assertEquals(listOf("network", "settings", "mute"), QuickControlStore(context).items.map { it.action })
+        assertEquals("conflict", store.change("place", actions[1].id, delta = 0, expected = revision))
+        assertEquals("invalid", store.change("place", actions.first().id, delta = 3))
+        assertEquals("exists", store.change("add", value = actions.first().copy(id = "another")))
+        assertEquals("invalid", store.change("add", value = QuickAction(title = "Unknown", kind = "system", action = "shell")))
+        assertEquals(3, store.items.size)
     }
 }

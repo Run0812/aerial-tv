@@ -1,21 +1,22 @@
 package app.orchard.tv.ui.control
 
 import android.app.AlertDialog
-import android.content.Context
-import android.text.InputType
 import android.widget.EditText
-import android.widget.LinearLayout
-import android.widget.ScrollView
-import android.widget.TextView
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.key
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -26,12 +27,10 @@ import app.orchard.tv.CcPage
 import app.orchard.tv.HomeViewModel
 import app.orchard.tv.Overlay
 import app.orchard.tv.R
-import app.orchard.tv.apps.AppCatalog
-import app.orchard.tv.apps.AppNames
 import app.orchard.tv.settings.QuickAction
-import app.orchard.tv.settings.QuickControlStore
 import app.orchard.tv.settings.QuickControls
 import app.orchard.tv.settings.Restricted
+import app.orchard.tv.system.QuickCatalog
 import app.orchard.tv.ui.home.MenuRow
 import app.orchard.tv.ui.theme.Glyph
 import app.orchard.tv.ui.theme.Type
@@ -40,125 +39,79 @@ import app.orchard.tv.ui.theme.Type
 internal fun QuickControlsPage(vm: HomeViewModel, takeFocus: Boolean) {
     val context = LocalContext.current
     val store = QuickControls.store
+    var adding by remember { mutableStateOf(false) }
     val back = remember { FocusRequester() }
-    LaunchedEffect(takeFocus) {
+    BackHandler(enabled = adding) { adding = false }
+    LaunchedEffect(takeFocus, adding) {
         if (takeFocus) { withFrameNanos { }; runCatching { back.requestFocus() } }
     }
-
     fun change(op: String, id: String = "", value: QuickAction? = null, on: Boolean = false, delta: Int = 0, rev: Long = store.revision) {
         vm.whenUnlocked {
             if (Restricted.active) return@whenUnlocked
             val error = store.change(op, id, value, on, delta, rev)
-            if (error != null) vm.notify(context.getString(quickErrorMessage(error)), Glyph.Info)
+            if (error != null) vm.notify(context.getString(when (error) {
+                "limit" -> R.string.qc_limit
+                "exists" -> R.string.qc_exists
+                "conflict", "missing" -> R.string.qc_conflict
+                else -> R.string.qc_invalid
+            }), Glyph.Info)
         }
     }
-
-    fun edit(control: QuickAction, adding: Boolean, revision: Long = store.revision) {
-        editQuickAction(context, control) { edited ->
-            change(if (adding) "add" else "update", edited.id, edited, rev = revision)
-        }
-    }
-
-    Column(Modifier.heightIn(max = 460.dp).verticalScroll(rememberScrollState())) {
-        MenuRow(Glyph.ChevronLeft, stringResource(R.string.qc_title), focusRequester = back,
-            onClick = { vm.overlay = Overlay.ControlCenter(CcPage.Main) })
-        MenuRow(Glyph.Switches, stringResource(R.string.qc_show_area),
-            trailing = stringResource(if (store.enabled) R.string.st_on else R.string.st_off),
-            onClick = { change("enabled", on = !store.enabled) })
-        MenuRow(Glyph.Pencil, stringResource(R.string.qc_add), trailing = "›", onClick = {
-            if (store.items.size >= QuickControlStore.MAX_ITEMS) vm.notify(context.getString(R.string.qc_limit), Glyph.Info)
-            else vm.whenUnlocked { chooseQuickKind(context) { edit(it, true) } }
-        })
-        if (store.items.isEmpty()) BasicText(stringResource(R.string.qc_empty), style = Type.Caption)
-        store.items.forEachIndexed { index, control ->
-            key(control.id) {
-                MenuRow(Glyph.Switches, control.title,
-                    trailing = stringResource(if (control.enabled) R.string.st_on else R.string.st_off) + " ›",
-                    onClick = {
-                        vm.whenUnlocked {
-                            val revision = store.revision
-                            val choices = buildList<Pair<Int, () -> Unit>> {
-                                add(R.string.qc_edit to { edit(control, false, revision) })
-                                add((if (control.enabled) R.string.qc_hide else R.string.qc_show) to {
-                                    change("toggle", control.id, on = !control.enabled, rev = revision)
-                                })
-                                if (index > 0) add(R.string.qc_up to { change("move", control.id, delta = -1, rev = revision) })
-                                if (index < store.items.lastIndex) add(R.string.qc_down to { change("move", control.id, delta = 1, rev = revision) })
-                                add(R.string.qc_delete to { change("delete", control.id, rev = revision) })
+    Column(Modifier.heightIn(max = 460.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(9.dp)) {
+        MenuRow(Glyph.ChevronLeft, stringResource(if (adding) R.string.qc_add else R.string.qc_title), focusRequester = back,
+            onClick = { if (adding) adding = false else vm.overlay = Overlay.ControlCenter(CcPage.Main) })
+        if (adding) {
+            val catalog = QuickCatalog.available(context)
+            val chosen = store.items.map { it.catalogKey }.toSet()
+            listOf("system" to R.string.qc_group_system, "apps" to R.string.qc_group_apps).forEach { (group, label) ->
+                val entries = catalog.filter { it.group == group }
+                if (entries.isNotEmpty()) {
+                    BasicText(stringResource(label), style = Type.Callout)
+                    QuickTileGrid(entries.map { QuickTile(it.key, it.title, it.icon, it.control.pkg, it.key in chosen) }) { tile ->
+                        val entry = entries.firstOrNull { it.key == tile.id } ?: return@QuickTileGrid
+                        change("add", value = entry.control)
+                        adding = false
+                    }
+                }
+            }
+        } else {
+            MenuRow(Glyph.Switches, stringResource(R.string.qc_show_area),
+                trailing = stringResource(if (store.enabled) R.string.st_on else R.string.st_off),
+                onClick = { change("enabled", on = !store.enabled) })
+            BasicText(stringResource(R.string.qc_arrange_hint), style = Type.Caption)
+            val tiles = store.items.map { it.tile().copy(title = it.title + if (it.enabled) "" else " · " + context.getString(R.string.qc_hidden)) } +
+                QuickTile("add", context.getString(R.string.qc_add), "add")
+            QuickTileGrid(tiles) { tile ->
+                if (tile.id == "add") { adding = true; return@QuickTileGrid }
+                val control = store.items.firstOrNull { it.id == tile.id } ?: return@QuickTileGrid
+                val index = store.items.indexOf(control)
+                val revision = store.revision
+                val choices = buildList<Pair<Int, () -> Unit>> {
+                    add(R.string.qc_rename to {
+                        val input = EditText(context).apply { setSingleLine(); setText(control.title); selectAll() }
+                        val dialog = AlertDialog.Builder(context).setTitle(R.string.qc_rename).setView(input)
+                            .setNegativeButton(android.R.string.cancel, null).setPositiveButton(R.string.qc_save, null).create()
+                        dialog.setOnShowListener {
+                            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                                val edited = control.copy(title = input.text.toString().trim())
+                                if (!edited.valid()) input.error = context.getString(R.string.qc_invalid)
+                                else { dialog.dismiss(); change("update", control.id, edited, rev = revision) }
                             }
-                            AlertDialog.Builder(context).setTitle(control.title)
-                                .setItems(choices.map { context.getString(it.first) }.toTypedArray()) { _, which -> choices[which].second() }
-                                .setNegativeButton(android.R.string.cancel, null).show()
                         }
+                        dialog.show()
                     })
+                    if (index > 0) add(R.string.qc_up to { change("move", control.id, delta = -1, rev = revision) })
+                    if (index < store.items.lastIndex) add(R.string.qc_down to { change("move", control.id, delta = 1, rev = revision) })
+                    add((if (control.enabled) R.string.qc_hide else R.string.qc_show) to { change("toggle", control.id, on = !control.enabled, rev = revision) })
+                    add(R.string.qc_remove to { change("delete", control.id, rev = revision) })
+                }
+                vm.whenUnlocked {
+                    AlertDialog.Builder(context).setTitle(control.title)
+                        .setItems(choices.map { context.getString(it.first) }.toTypedArray()) { _, which -> choices[which].second() }
+                        .setNegativeButton(android.R.string.cancel, null).show()
+                }
             }
+            Spacer(Modifier.height(5.dp))
         }
     }
-}
-
-private fun chooseQuickKind(context: Context, onChoose: (QuickAction) -> Unit) {
-    val labels = arrayOf("Clash Meta", context.getString(R.string.qc_app), context.getString(R.string.qc_activity), context.getString(R.string.qc_broadcast))
-    AlertDialog.Builder(context).setTitle(R.string.qc_add).setItems(labels) { _, which ->
-        when (which) {
-            0 -> onChoose(QuickAction(title = "Clash Meta"))
-            1 -> {
-                val apps = AppCatalog.loaded.filter { it.source == null && it.folder == null && it.shortcut == null }
-                    .sortedBy { (AppNames.of(it.key) ?: it.label).lowercase() }
-                if (apps.isEmpty()) onChoose(QuickAction(title = "", kind = "app"))
-                else AlertDialog.Builder(context).setTitle(R.string.qc_app)
-                    .setItems(apps.map { AppNames.of(it.key) ?: it.label }.toTypedArray()) { _, i ->
-                        val app = apps[i]
-                        onChoose(QuickAction(title = (AppNames.of(app.key) ?: app.label).take(64), kind = "app", pkg = app.packageName))
-                    }.setNegativeButton(android.R.string.cancel, null).show()
-            }
-            2 -> onChoose(QuickAction(title = "", kind = "activity"))
-            else -> onChoose(QuickAction(title = "", kind = "broadcast"))
-        }
-    }.setNegativeButton(android.R.string.cancel, null).show()
-}
-
-/** Native text fields let TV keyboards and connected keyboards enter the exact action parameters. */
-private fun editQuickAction(context: Context, control: QuickAction, onSave: (QuickAction) -> Unit) {
-    val box = LinearLayout(context).apply {
-        orientation = LinearLayout.VERTICAL
-        val pad = (24 * resources.displayMetrics.density).toInt()
-        setPadding(pad, 0, pad, pad / 2)
-    }
-    fun field(label: Int, value: String, multiline: Boolean = false): EditText {
-        box.addView(TextView(context).apply { setText(label) })
-        return EditText(context).apply {
-            contentDescription = context.getString(label)
-            inputType = InputType.TYPE_CLASS_TEXT or if (multiline) InputType.TYPE_TEXT_FLAG_MULTI_LINE else InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
-            setSingleLine(!multiline)
-            if (multiline) minLines = 2
-            setText(value)
-            box.addView(this)
-        }
-    }
-    val title = field(R.string.qc_name, control.title)
-    val pkg = if (control.kind != "clash") field(R.string.qc_package, control.pkg) else null
-    val explicit = control.kind == "activity" || control.kind == "broadcast"
-    val component = if (explicit) field(R.string.qc_component, control.component) else null
-    val action = if (explicit) field(R.string.qc_action, control.action) else null
-    val uri = if (explicit) field(R.string.qc_uri, control.uri) else null
-    val extras = if (explicit) field(R.string.qc_extras, control.extras, multiline = true) else null
-    val scroll = ScrollView(context).apply { addView(box) }
-    val dialog = AlertDialog.Builder(context).setTitle(R.string.qc_edit).setView(scroll)
-        .setNegativeButton(android.R.string.cancel, null).setPositiveButton(R.string.qc_save, null).create()
-    dialog.setOnShowListener {
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-            val edited = control.copy(title = title.text.toString().trim(), pkg = pkg?.text?.toString()?.trim().orEmpty(),
-                component = component?.text?.toString()?.trim().orEmpty(), action = action?.text?.toString()?.trim().orEmpty(),
-                uri = uri?.text?.toString()?.trim().orEmpty(), extras = extras?.text?.toString()?.trim().orEmpty().ifBlank { "{}" })
-            if (!edited.valid()) title.error = context.getString(R.string.qc_invalid)
-            else { dialog.dismiss(); onSave(edited) }
-        }
-    }
-    dialog.show()
-}
-
-private fun quickErrorMessage(error: String): Int = when (error) {
-    "limit" -> R.string.qc_limit
-    "conflict", "missing" -> R.string.qc_conflict
-    else -> R.string.qc_invalid
 }

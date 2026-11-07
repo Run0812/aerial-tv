@@ -21,6 +21,7 @@ import app.orchard.tv.settings.AerialSettings
 import app.orchard.tv.settings.QuickAction
 import app.orchard.tv.settings.QuickControls
 import app.orchard.tv.system.QuickActionRunner
+import app.orchard.tv.system.QuickCatalog
 import app.orchard.tv.BuildConfig
 import app.orchard.tv.settings.KidsLock
 import app.orchard.tv.settings.Restricted
@@ -246,7 +247,10 @@ class PhoneServer private constructor(private val context: Context, private val 
             .put("videoRoom", ScreensaverVideos.room(context))
             .put("focusStyle", AerialSettings.focusStyle.key)
             .put("kids", kidsState())
-            .put("quickControls", QuickControls.store.json())
+            .put("quickControls", QuickControls.store.json().apply {
+                put("catalog", JSONArray().apply { QuickCatalog.available(context).forEach { put(it.json()) } })
+                put("muted", app.orchard.tv.system.SystemProbe.volume(context).muted)
+            })
             .put("wallpaperAlwaysMoves", AerialSettings.wallpaperAlwaysMoves)
             .put("showWeather", AerialSettings.showWeather)
             .put("screensaverClock", AerialSettings.screensaverClock)
@@ -458,7 +462,7 @@ class PhoneServer private constructor(private val context: Context, private val 
                     when {
                         Restricted.active -> "restricted"
                         !store.enabled || control == null -> "unavailable"
-                        Build.VERSION.SDK_INT >= 29 && control.kind != "broadcast" && !KidsWatch.homeInFront -> "background"
+                        Build.VERSION.SDK_INT >= 29 && control.kind != "broadcast" && !(control.kind == "system" && control.action == "mute") && !KidsWatch.homeInFront -> "background"
                         else -> when (val result = QuickActionRunner.run(context, control)) {
                             QuickActionRunner.Result.Sent -> null
                             else -> result.name.lowercase()
@@ -466,7 +470,13 @@ class PhoneServer private constructor(private val context: Context, private val 
                     }
                 }
                 else -> {
-                    val control = fields["item"]?.let { runCatching { QuickAction.from(JSONObject(it)) }.getOrNull() }
+                    // The client chooses a capability, never an executable protocol description.
+                    val control = when (op) {
+                        "add" -> QuickCatalog.available(context).firstOrNull { it.key == fields["key"] }?.control
+                        "update" -> store.items.firstOrNull { it.id == id }?.copy(title = fields["title"].orEmpty().trim())
+                        else -> null
+                    }
+                    if (op == "add" && control != null && store.items.any { QuickCatalog.key(it) == QuickCatalog.key(control) }) return@runBlocking "exists"
                     store.change(op, id, control, fields["on"] == "1", fields["delta"]?.toIntOrNull() ?: 0, revision)
                 }
             }

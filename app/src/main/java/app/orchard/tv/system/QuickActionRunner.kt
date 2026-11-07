@@ -22,6 +22,23 @@ object QuickActionRunner {
             ClashShortcut.Result.Unavailable -> Result.Unavailable
             ClashShortcut.Result.Failed -> Result.Failed
         }
+        if (control.kind == "system") return runCatching {
+            when (control.action) {
+                "mute" -> SystemProbe.toggleMute(context)
+                "network" -> {
+                    val pages = SystemProbe.networkSettingsIntents(context, SystemProbe.network(context).kind == NetKind.Ethernet)
+                    LaunchFallback.arm(pages.drop(1))
+                    SystemProbe.startSettingsIntent(context, pages.first())
+                }
+                "bluetooth" -> context.startActivity(Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                "settings" -> {
+                    LaunchFallback.arm(SystemProbe.settingsFallbacks(context))
+                    SystemProbe.startSettingsIntent(context, SystemProbe.settingsIntent(context))
+                }
+                "inputs" -> if (!SystemProbe.openInputPicker(context)) return Result.Unavailable
+            }
+            Result.Sent
+        }.getOrDefault(Result.Failed)
         return try {
             val pm = context.packageManager
             val intent = if (control.kind == "app") {

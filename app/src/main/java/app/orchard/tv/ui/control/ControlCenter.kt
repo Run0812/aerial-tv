@@ -348,16 +348,13 @@ private fun MainPage(vm: HomeViewModel, now: LocalDateTime, takeFocus: Boolean, 
                 stringResource(R.string.qc_title), style = Type.Caption,
                 modifier = Modifier.padding(start = 14.dp, bottom = 2.dp),
             )
-            quick.items.filter { it.enabled }.forEach { control ->
-                androidx.compose.runtime.key(control.id) {
-                    MenuRow(Glyph.Switches, control.title, trailing = stringResource(R.string.qc_run), onClick = {
-                        vm.whenUnlocked {
-                            val current = quick.items.firstOrNull { it.id == control.id && it.enabled }
-                            val result = if (!quick.enabled || current == null || Restricted.active) QuickActionRunner.Result.Unavailable
-                            else QuickActionRunner.run(context, current)
-                            vm.notify(context.getString(result.message), Glyph.Switches)
-                        }
-                    })
+            QuickTileGrid(quick.items.filter { it.enabled }.map { it.tile() }, muted = vm.volume.muted) { tile ->
+                vm.whenUnlocked {
+                    val current = quick.items.firstOrNull { it.id == tile.id && it.enabled }
+                    val result = if (!quick.enabled || current == null || Restricted.active) QuickActionRunner.Result.Unavailable
+                    else QuickActionRunner.run(context, current)
+                    vm.notify(context.getString(result.message), Glyph.Switches)
+                    vm.refreshVolume(); vm.refreshNetwork()
                 }
             }
         }

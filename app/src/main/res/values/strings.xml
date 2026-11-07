@@ -355,4 +355,15 @@
     <string name="qc_hidden">Hidden</string>
     <string name="qc_app_pick">Choose an installed app</string>
     <string name="qc_pin">Parental PIN</string>
+    <string name="qc_network_settings">Network settings</string>
+    <string name="qc_bluetooth_settings">Bluetooth settings</string>
+    <string name="qc_group_system">Available controls</string>
+    <string name="qc_group_apps">Open an app</string>
+    <string name="qc_arrange_hint">Select a tile to rename, move, hide or remove it.</string>
+    <string name="qc_rename">Rename</string>
+    <string name="qc_remove">Remove</string>
+    <string name="qc_done">Done</string>
+    <string name="qc_reorder">Drag to reorder</string>
+    <string name="qc_added">Added</string>
+    <string name="qc_exists">This control is already added.</string>
 </resources>

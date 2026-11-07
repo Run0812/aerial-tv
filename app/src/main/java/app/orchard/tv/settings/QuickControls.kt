@@ -21,13 +21,20 @@ data class QuickAction(
     val uri: String = "",
     val extras: String = "{}",
 ) {
+    val catalogKey: String get() = when (kind) {
+        "clash" -> "clash"
+        "app" -> "app:$pkg"
+        "system" -> "system:$action"
+        else -> "legacy:$id"
+    }
     fun json() = JSONObject().put("id", id).put("title", title).put("kind", kind).put("enabled", enabled)
-        .put("pkg", pkg).put("component", component).put("action", action).put("uri", uri).put("extras", extras)
+        .put("key", catalogKey).put("pkg", pkg).put("component", component).put("action", action).put("uri", uri).put("extras", extras)
 
     fun valid(): Boolean {
         if (id.length !in 1..80 || !id.matches(Regex("[A-Za-z0-9_-]+")) || title.isBlank() || title.length > 64) return false
-        if (kind !in listOf("clash", "app", "activity", "broadcast")) return false
+        if (kind !in listOf("clash", "app", "system", "activity", "broadcast")) return false
         if (kind == "clash") return true
+        if (kind == "system") return action in listOf("network", "bluetooth", "mute", "inputs", "settings")
         if (!pkg.matches(Regex("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+")) || pkg.length > 200) return false
         if (kind == "app") return true
         if (component.length > 250 || !component.matches(Regex("\\.?[A-Za-z_$][A-Za-z0-9_.$]*"))) return false
@@ -95,6 +102,7 @@ class QuickControlStore(context: Context) {
             "enabled" -> current.copy(enabled = on)
             "add" -> {
                 if (value == null || !value.valid() || items.any { it.id == value.id }) return "invalid"
+                if (items.any { it.catalogKey == value.catalogKey }) return "exists"
                 if (items.size >= MAX_ITEMS) return "limit"
                 current.copy(enabled = current.enabled || items.isEmpty(), items = items + value)
             }
@@ -103,14 +111,15 @@ class QuickControlStore(context: Context) {
                 if (value == null || value.id != id || !value.valid()) return "invalid"
                 current.copy(items = items.map { if (it.id == id) value else it })
             }
-            "toggle", "delete", "move" -> {
+            "toggle", "delete", "move", "place" -> {
                 if (index < 0) return "missing"
                 current.copy(items = when (op) {
                     "toggle" -> items.map { if (it.id == id) it.copy(enabled = on) else it }
                     "delete" -> items.filterNot { it.id == id }
                     else -> {
-                        if (delta != -1 && delta != 1) return "invalid"
-                        val destination = (index + delta).coerceIn(0, items.lastIndex)
+                        if (op == "move" && delta != -1 && delta != 1) return "invalid"
+                        if (op == "place" && delta !in items.indices) return "invalid"
+                        val destination = if (op == "place") delta else (index + delta).coerceIn(0, items.lastIndex)
                         items.toMutableList().apply { add(destination, removeAt(index)) }
                     }
                 })
