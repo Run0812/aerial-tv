@@ -14,6 +14,7 @@ internal object LauncherQuickShortcuts {
     fun hasAccess(context: Context): Boolean = launcher(context) != null
 
     fun available(context: Context): List<QuickAction> {
+        if (Build.VERSION.SDK_INT < 25) return emptyList()
         val launcher = launcher(context) ?: return emptyList()
         return query(launcher).mapNotNull { shortcut ->
             val title = shortcut.shortLabel?.toString()?.trim().orEmpty().take(64)
@@ -23,6 +24,7 @@ internal object LauncherQuickShortcuts {
     }
 
     fun start(context: Context, control: QuickAction): QuickActionRunner.Result {
+        if (Build.VERSION.SDK_INT < 25) return QuickActionRunner.Result.Unavailable
         val launcher = launcher(context) ?: return QuickActionRunner.Result.Unavailable
         if (query(launcher, control.pkg, control.shortcutId).isEmpty()) return QuickActionRunner.Result.Unavailable
         return try {
@@ -35,6 +37,7 @@ internal object LauncherQuickShortcuts {
     }
 
     fun icon(context: Context, pkg: String, id: String): Bitmap? {
+        if (Build.VERSION.SDK_INT < 25) return null
         if (!QuickAction(title = "Icon", kind = "shortcut", pkg = pkg, shortcutId = id).valid()) return null
         val launcher = launcher(context) ?: return null
         val shortcut = query(launcher, pkg, id).firstOrNull() ?: return null
