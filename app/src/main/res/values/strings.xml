@@ -367,4 +367,6 @@
     <string name="qc_added">Added</string>
     <string name="qc_exists">This control is already added.</string>
     <string name="qc_mute">Mute</string>
+    <string name="qc_group_shortcuts">App shortcuts</string>
+    <string name="qc_shortcuts_host">App shortcuts are available when Aerial is the system launcher.</string>
 </resources>

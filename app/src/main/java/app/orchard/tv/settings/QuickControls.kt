@@ -20,23 +20,27 @@ data class QuickAction(
     val action: String = "",
     val uri: String = "",
     val extras: String = "{}",
+    val shortcutId: String = "",
 ) {
     val catalogKey: String get() = when (kind) {
         "clash" -> "clash"
         "app" -> "app:$pkg"
         "system" -> "system:$action"
+        "shortcut" -> "shortcut:$pkg:$shortcutId"
         else -> "legacy:$id"
     }
     fun json() = JSONObject().put("id", id).put("title", title).put("kind", kind).put("enabled", enabled)
         .put("key", catalogKey).put("pkg", pkg).put("component", component).put("action", action).put("uri", uri).put("extras", extras)
+        .put("shortcutId", shortcutId)
 
     fun valid(): Boolean {
         if (id.length !in 1..80 || !id.matches(Regex("[A-Za-z0-9_-]+")) || title.isBlank() || title.length > 64) return false
-        if (kind !in listOf("clash", "app", "system", "activity", "broadcast")) return false
+        if (kind !in listOf("clash", "app", "system", "activity", "broadcast", "shortcut")) return false
         if (kind == "clash") return true
         if (kind == "system") return action in listOf("network", "bluetooth", "mute", "inputs", "settings")
         if (!pkg.matches(Regex("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+")) || pkg.length > 200) return false
         if (kind == "app") return true
+        if (kind == "shortcut") return shortcutId.isNotBlank() && shortcutId.length <= 1024
         if (component.length > 250 || !component.matches(Regex("\\.?[A-Za-z_$][A-Za-z0-9_.$]*"))) return false
         if (action.length > 250 || uri.length > 2048 || extras.length > 8192) return false
         if (uri.isNotBlank()) {
@@ -59,6 +63,7 @@ data class QuickAction(
             enabled = json.optBoolean("enabled", true), pkg = json.optString("pkg").trim(),
             component = json.optString("component").trim(), action = json.optString("action").trim(),
             uri = json.optString("uri").trim(), extras = json.optString("extras", "{}").ifBlank { "{}" },
+            shortcutId = json.optString("shortcutId"),
         )
     }
 }

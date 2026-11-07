@@ -13,7 +13,8 @@ import org.json.JSONObject
 object QuickCatalog {
     data class Entry(val key: String, val title: String, val icon: String, val group: String, val control: QuickAction) {
         fun json() = JSONObject().put("key", key).put("title", title).put("icon", icon).put("group", group)
-            .put("app", if (control.kind == "app") control.pkg else "")
+            .put("app", if (control.kind == "app" || control.kind == "shortcut") control.pkg else "")
+            .put("shortcutId", control.shortcutId)
     }
 
     fun key(control: QuickAction): String = control.catalogKey
@@ -34,6 +35,9 @@ object QuickCatalog {
         system("mute", R.string.qc_mute, "mute")
         system("inputs", R.string.cc_inputs, "inputs")
         system("settings", R.string.cc_settings, "settings")
+        LauncherQuickShortcuts.available(context).forEach { control ->
+            add(Entry(control.catalogKey, control.title, "shortcut", "shortcuts", control))
+        }
         AppCatalog.loaded.filter { it.source == null && it.folder == null && it.shortcut == null }
             .distinctBy { it.packageName }.sortedBy { (AppNames.of(it.key) ?: it.label).lowercase() }.forEach { app ->
                 val title = (AppNames.of(app.key) ?: app.label).take(64)

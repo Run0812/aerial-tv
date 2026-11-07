@@ -359,4 +359,6 @@
     <string name="qc_added">Қосылды</string>
     <string name="qc_exists">Бұл түйме бұрын қосылған.</string>
     <string name="qc_mute">Дыбыссыз</string>
+    <string name="qc_group_shortcuts">Қолданба таңбашалары</string>
+    <string name="qc_shortcuts_host">Aerial жүйелік іске қосқыш болғанда қолданба таңбашалары қолжетімді.</string>
 </resources>

@@ -359,4 +359,6 @@
     <string name="qc_added">Добавлено</string>
     <string name="qc_exists">Эта кнопка уже добавлена.</string>
     <string name="qc_mute">Без звука</string>
+    <string name="qc_group_shortcuts">Ярлыки приложений</string>
+    <string name="qc_shortcuts_host">Ярлыки доступны, когда Aerial выбран системным лаунчером.</string>
 </resources>

@@ -17,29 +17,43 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.orchard.tv.apps.AppCatalog
 import app.orchard.tv.settings.QuickAction
+import app.orchard.tv.system.LauncherQuickShortcuts
 import app.orchard.tv.ui.components.Pressable
 import app.orchard.tv.ui.components.smoothBackground
 import app.orchard.tv.ui.theme.Glyph
 import app.orchard.tv.ui.theme.GlyphIcon
 import app.orchard.tv.ui.theme.Palette
 import app.orchard.tv.ui.theme.Type
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
-internal data class QuickTile(val id: String, val title: String, val icon: String, val app: String = "", val checked: Boolean = false)
+internal data class QuickTile(
+    val id: String,
+    val title: String,
+    val icon: String,
+    val app: String = "",
+    val checked: Boolean = false,
+    val shortcutId: String = "",
+)
 
 internal fun QuickAction.tile(checked: Boolean = false) = QuickTile(id, title,
-    when (kind) { "clash" -> "vpn"; "app" -> "app"; "system" -> action; else -> "control" },
-    if (kind == "app") pkg else "", checked)
+    when (kind) { "clash" -> "vpn"; "app", "shortcut" -> kind; "system" -> action; else -> "control" },
+    if (kind == "app" || kind == "shortcut") pkg else "", checked, shortcutId)
 
 /** Small control-center tiles: focus is white, mute's active state is blue, selection uses a tick. */
 @Composable
@@ -78,8 +92,16 @@ internal fun QuickTileGrid(tiles: List<QuickTile>, muted: Boolean = false, onCli
 
 @Composable
 private fun QuickSymbol(tile: QuickTile, color: Color) {
+    val context = LocalContext.current
+    val shortcut by produceState<ImageBitmap?>(null, tile.app, tile.shortcutId) {
+        value = if (tile.shortcutId.isBlank()) null else withContext(Dispatchers.IO) {
+            LauncherQuickShortcuts.icon(context, tile.app, tile.shortcutId)?.asImageBitmap()
+        }
+    }
+    val shortcutIcon = shortcut
     val app = if (tile.app.isNotBlank()) AppCatalog.loaded.firstOrNull { it.packageName == tile.app } else null
     when {
+        shortcutIcon != null -> Image(shortcutIcon, contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.size(27.dp))
         app != null -> Image(app.art.fore ?: app.art.back, contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.size(27.dp))
         tile.icon == "add" -> BasicText("+", style = Type.LargeTitle.copy(color = color, fontSize = 29.sp))
         tile.icon == "bluetooth" -> Canvas(Modifier.size(25.dp)) {

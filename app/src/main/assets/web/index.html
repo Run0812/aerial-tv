@@ -1483,6 +1483,8 @@ for (const [key, en, zh, ru, uk, kk] of [
   ["qc_reorder","Drag to reorder","拖动排序","Перетащить","Перетягнути","Ретін өзгерту үшін сүйреңіз"],
   ["qc_added","Added","已添加","Добавлено","Додано","Қосылды"],
   ["qc_exists","This control is already added.","已添加此控制。","Эта кнопка уже добавлена.","Цю кнопку вже додано.","Бұл түйме бұрын қосылған."],
+  ["qc_group_shortcuts","App shortcuts","应用快捷操作","Ярлыки приложений","Ярлики застосунків","Қолданба таңбашалары"],
+  ["qc_shortcuts_host","App shortcuts are available when Aerial is the system's launcher.","Aerial 成为系统桌面后，可读取应用快捷操作。","Ярлыки доступны, когда Aerial выбран системным лаунчером.","Ярлики доступні, коли Aerial вибрано системним лаунчером.","Aerial жүйелік іске қосқыш болғанда қолданба таңбашалары қолжетімді."],
 ]) {
   KEYS.push(key);
   for (const [lang, value] of Object.entries({ en, zh, ru, uk, kk })) TEXTS[lang].push(value);
@@ -2516,7 +2518,12 @@ async function quickRequest(op, fields = {}, revision = state?.quickControls?.re
 
 function quickSymbol(entry) {
   if (entry.app) {
-    const img = el('img', 'qc-app-icon'); img.src = base + 'tile/' + encodeURIComponent(entry.app);
+    const img = el('img', 'qc-app-icon');
+    const appIcon = base + 'tile/' + encodeURIComponent(entry.app);
+    if (entry.shortcutId) {
+      img.onerror = () => { img.onerror = null; img.src = appIcon; };
+      img.src = base + 'shortcut-icon?' + new URLSearchParams({app:entry.app,id:entry.shortcutId});
+    } else img.src = appIcon;
     img.alt = ''; img.loading = 'lazy'; return img;
   }
   const paths = {
@@ -2536,7 +2543,10 @@ function quickSymbol(entry) {
 }
 
 function quickEntry(control, q) {
-  return (q.catalog || []).find(e => e.key === control.key) || { icon: control.kind === 'clash' ? 'vpn' : 'control', app: control.kind === 'app' ? control.pkg : '' };
+  return (q.catalog || []).find(e => e.key === control.key) || {
+    icon: control.kind === 'clash' ? 'vpn' : 'control',
+    app: ['app','shortcut'].includes(control.kind) ? control.pkg : ''
+  };
 }
 
 function quickButton(title, entry, click) {
@@ -2607,7 +2617,7 @@ function quickCatalog() {
   const q = state.quickControls, chosen = new Set(q.items.map(c => c.key));
   openSheet(body => {
     body.append(el('h2','big',t('qc_add')));
-    for (const group of ['system','apps']) {
+    for (const group of ['system','shortcuts','apps']) {
       const entries = (q.catalog || []).filter(e => e.group === group);
       if (!entries.length) continue;
       body.append(el('h4','',t('qc_group_' + group)));
@@ -2624,6 +2634,7 @@ function quickCatalog() {
       });
       body.append(grid);
     }
+    if (q.shortcutsNeedHost) body.append(el('p','foot',t('qc_shortcuts_host')));
   });
 }
 

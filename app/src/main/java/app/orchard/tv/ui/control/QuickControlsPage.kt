@@ -1,6 +1,7 @@
 package app.orchard.tv.ui.control
 
 import android.app.AlertDialog
+import android.os.Build
 import android.widget.EditText
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
@@ -31,6 +32,7 @@ import app.orchard.tv.settings.QuickAction
 import app.orchard.tv.settings.QuickControls
 import app.orchard.tv.settings.Restricted
 import app.orchard.tv.system.QuickCatalog
+import app.orchard.tv.system.LauncherQuickShortcuts
 import app.orchard.tv.ui.home.MenuRow
 import app.orchard.tv.ui.theme.Glyph
 import app.orchard.tv.ui.theme.Type
@@ -63,16 +65,20 @@ internal fun QuickControlsPage(vm: HomeViewModel, takeFocus: Boolean) {
         if (adding) {
             val catalog = QuickCatalog.available(context)
             val chosen = store.items.map { it.catalogKey }.toSet()
-            listOf("system" to R.string.qc_group_system, "apps" to R.string.qc_group_apps).forEach { (group, label) ->
+            listOf("system" to R.string.qc_group_system, "shortcuts" to R.string.qc_group_shortcuts,
+                "apps" to R.string.qc_group_apps).forEach { (group, label) ->
                 val entries = catalog.filter { it.group == group }
                 if (entries.isNotEmpty()) {
                     BasicText(stringResource(label), style = Type.Callout)
-                    QuickTileGrid(entries.map { QuickTile(it.key, it.title, it.icon, it.control.pkg, it.key in chosen) }) { tile ->
+                    QuickTileGrid(entries.map { it.control.tile(it.key in chosen).copy(id = it.key) }) { tile ->
                         val entry = entries.firstOrNull { it.key == tile.id } ?: return@QuickTileGrid
                         change("add", value = entry.control)
                         adding = false
                     }
                 }
+            }
+            if (Build.VERSION.SDK_INT >= 25 && !LauncherQuickShortcuts.hasAccess(context)) {
+                BasicText(stringResource(R.string.qc_shortcuts_host), style = Type.Caption)
             }
         } else {
             MenuRow(Glyph.Switches, stringResource(R.string.qc_show_area),

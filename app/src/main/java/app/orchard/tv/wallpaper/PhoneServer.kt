@@ -22,6 +22,7 @@ import app.orchard.tv.settings.QuickAction
 import app.orchard.tv.settings.QuickControls
 import app.orchard.tv.system.QuickActionRunner
 import app.orchard.tv.system.QuickCatalog
+import app.orchard.tv.system.LauncherQuickShortcuts
 import app.orchard.tv.BuildConfig
 import app.orchard.tv.settings.KidsLock
 import app.orchard.tv.settings.Restricted
@@ -138,6 +139,7 @@ class PhoneServer private constructor(private val context: Context, private val 
                     json(state().put("removed", removed))
                 }
                 path.startsWith("/tile/") -> tile(java.net.URLDecoder.decode(path.removePrefix("/tile/"), "UTF-8"), own = session.parameters["art"]?.firstOrNull() == "own")
+                session.method == Method.GET && path == "/shortcut-icon" -> shortcutIcon(session)
                 path.startsWith("/library/") -> libraryPicture(java.net.URLDecoder.decode(path.removePrefix("/library/"), "UTF-8"))
                 session.method == Method.POST && path == "/api/icon" -> icon(session)
                 session.method == Method.POST && path == "/api/source/name" -> {
@@ -248,6 +250,7 @@ class PhoneServer private constructor(private val context: Context, private val 
             .put("focusStyle", AerialSettings.focusStyle.key)
             .put("kids", kidsState())
             .put("quickControls", QuickControls.store.json().apply {
+                put("shortcutsNeedHost", Build.VERSION.SDK_INT >= 25 && !LauncherQuickShortcuts.hasAccess(context))
                 put("catalog", JSONArray().apply { QuickCatalog.available(context).forEach { put(it.json()) } })
                 put("muted", app.orchard.tv.system.SystemProbe.volume(context).muted)
             })
@@ -372,6 +375,20 @@ class PhoneServer private constructor(private val context: Context, private val 
         bmp.recycle()
         val bytes = out.toByteArray()
         return newFixedLengthResponse(Response.Status.OK, "image/jpeg", ByteArrayInputStream(bytes), bytes.size.toLong()).apply {
+            addHeader("Cache-Control", "no-store")
+        }
+    }
+
+    private fun shortcutIcon(session: IHTTPSession): Response {
+        val pkg = session.parameters["app"]?.firstOrNull().orEmpty()
+        val id = session.parameters["id"]?.firstOrNull().orEmpty()
+        val bitmap = LauncherQuickShortcuts.icon(context, pkg, id) ?: return text(Response.Status.NOT_FOUND, "")
+        val bytes = try {
+            ByteArrayOutputStream().apply { bitmap.compress(Bitmap.CompressFormat.PNG, 100, this) }.toByteArray()
+        } finally {
+            bitmap.recycle()
+        }
+        return newFixedLengthResponse(Response.Status.OK, "image/png", ByteArrayInputStream(bytes), bytes.size.toLong()).apply {
             addHeader("Cache-Control", "no-store")
         }
     }

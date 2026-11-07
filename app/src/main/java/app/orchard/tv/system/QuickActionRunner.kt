@@ -17,6 +17,7 @@ object QuickActionRunner {
 
     fun run(context: Context, control: QuickAction): Result {
         if (!control.valid() || !control.enabled) return Result.Invalid
+        if (control.kind == "shortcut") return LauncherQuickShortcuts.start(context, control)
         if (control.kind == "clash") return when (ClashShortcut.toggle(context)) {
             ClashShortcut.Result.Sent -> Result.Sent
             ClashShortcut.Result.Unavailable -> Result.Unavailable
