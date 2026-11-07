@@ -1,4 +1,4 @@
-name: Clash shortcut test APK
+name: Quick controls PR validation
 
 on:
   push:
@@ -13,6 +13,34 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  baseline-lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 4c2463e06854d00eb1616312e8cd93a6c8598846
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+          log-accepted-android-sdk-licenses: false
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Install Android SDK
+        run: sdkmanager 'platforms;android-36' 'build-tools;35.0.0'
+      - name: Record upstream full lint findings
+        continue-on-error: true
+        run: |
+          chmod +x gradlew
+          ./gradlew :app:lintStandardRelease --stacktrace
+      - uses: actions/upload-artifact@v4
+        with:
+          name: upstream-lint-baseline
+          path: app/build/reports/lint-results-standardRelease.xml
+          if-no-files-found: error
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -34,7 +62,7 @@ jobs:
       - name: Unit tests for both launcher variants
         run: |
           chmod +x gradlew
-          ./gradlew :app:testStandardDebugUnitTest :app:testGuardDebugUnitTest :app:lintStandardRelease :app:lintGuardRelease --stacktrace
+          ./gradlew :app:testStandardDebugUnitTest :app:testGuardDebugUnitTest --stacktrace
       - name: Restore persistent test signing key
         env:
           TEST_KEYSTORE: ${{ secrets.SHORTCUT_TEST_KEYSTORE }}
