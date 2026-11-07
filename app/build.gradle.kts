@@ -21,6 +21,15 @@ android {
         targetSdk = 34
         versionCode = 118
         versionName = "1.86"
+        manifestPlaceholders["aerialLabel"] = "@string/app_name"
+        // Fork-only test builds coexist with the official app and keep its data intact.
+        if (project.hasProperty("shortcutTest")) {
+            versionCode = 124
+            applicationIdSuffix = ".shortcuts"
+            versionNameSuffix = "-shortcuts-test"
+            resValue("string", "shortcut_test_name", "Aerial Shortcuts Test")
+            manifestPlaceholders["aerialLabel"] = "@string/shortcut_test_name"
+        }
         // `./gradlew -Pdiag ...`: a build for one reporter's TV whose logcat shows no app lines;
         // see system/DiagLog.kt.
         val diag = project.hasProperty("diag")
@@ -45,6 +54,12 @@ android {
             dimension = "home"
             versionNameSuffix = "-guard"
         }
+    }
+
+    if (project.hasProperty("shortcutTest")) {
+        // Remove background integration too: account/sync XML uses the official account type,
+        // which would otherwise overlap with an installed official Aerial even under a new ID.
+        sourceSets.getByName("guard").manifest.srcFile("src/shortcutTest/AndroidManifest.xml")
     }
 
     // The TVs only accept updates signed with the key Aerial was first installed with. That key
