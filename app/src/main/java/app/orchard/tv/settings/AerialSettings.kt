@@ -130,8 +130,6 @@ object AerialSettings {
     /** The weather beside the clock; off for those who want the time alone (issue #472). */
     var showWeather by mutableStateOf(true); private set
 
-    /** Optional Control Center action for an already configured Clash Meta client. */
-    var clashShortcut by mutableStateOf(false); private set
 
     /**
      * The time over Aerial's aerial and photo screensavers (issue #240: TCL's firmware puts its own
@@ -211,7 +209,7 @@ object AerialSettings {
         chosenAllNames = prefs.getBoolean("show_all_names", false)
         wallpaperAlwaysMoves = prefs.getBoolean("wallpaper_always_moves", false)
         showWeather = prefs.getBoolean("show_weather", true)
-        clashShortcut = prefs.getBoolean("clash_shortcut", false)
+        QuickControls.init(app)
         screensaverClock = prefs.getBoolean("screensaver_clock", true)
         // Before 1.28 this was on or off; on meant whichever sounds Aerial played.
         uiSounds = UiSounds.of(prefs.getString("ui_sounds_kind", null)) ?: when {
@@ -319,10 +317,6 @@ object AerialSettings {
         app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putBoolean("show_weather", on) }
     }
 
-    fun chooseClashShortcut(on: Boolean) {
-        clashShortcut = on
-        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit { putBoolean("clash_shortcut", on) }
-    }
 
     fun chooseScreensaverClock(on: Boolean) {
         screensaverClock = on

@@ -283,6 +283,14 @@
     .agrid.sorting .atile:not(.lift) { transition: none; }
     .toast { transform: translate(-50%, 0); }
   }
+  .qc-form label { display: grid; gap: 6px; margin: 10px 0; }
+  .qc-form [hidden] { display: none; }
+  .qc-form input, .qc-form select, .qc-form textarea {
+    width: 100%; padding: 10px; border: 1px solid var(--line, #8888); border-radius: 10px;
+    font: inherit; color: inherit; background: transparent;
+  }
+  .qc-form textarea { resize: vertical; }
+  .qc-buttons { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 </style>
 </head>
 <body>
@@ -348,6 +356,21 @@
 
 <!-- More -->
 <section data-tab="more" hidden>
+  <div id="quickBox" hidden>
+    <h2 data-i18n="qc_title"></h2>
+    <div class="list">
+      <label class="item"><span class="txt" data-i18n="qc_show_area"></span><input class="switch" type="checkbox" id="quickShow"></label>
+      <button class="item tint center" id="quickAdd" data-i18n="qc_add"></button>
+    </div>
+    <form class="list" id="quickPinForm" hidden>
+      <div class="item field">
+        <input id="quickPin" type="password" maxlength="4" autocomplete="off" data-i18n-placeholder="qc_pin" data-i18n-aria-label="qc_pin">
+        <button class="link" data-i18n="kids_unlock"></button>
+      </div>
+    </form>
+    <p class="foot" data-i18n="qc_phone_hint"></p>
+    <div class="list" id="quickRows"></div>
+  </div>
   <h2 data-i18n="focus"></h2>
   <div class="list" id="focus" role="radiogroup" data-i18n-aria-label="focus">
     <button class="item" role="radio" data-style="high_contrast"><span class="txt"><span data-i18n="focus_high"></span><span class="sub" data-i18n="focus_hint_high"></span></span><svg class="tick" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
@@ -1390,6 +1413,48 @@ const TEXTS = {
   "Кімге"
  ]
 };
+// Keep the quick-control copy in the same language tables as the rest of the page.
+for (const [key, en, zh, ru, uk, kk] of [
+  ["qc_title","Quick controls","快速控制","Быстрое управление","Швидке керування","Жылдам басқару"],
+  ["qc_edit_area","Edit quick controls","编辑快速控制","Настроить управление","Налаштувати керування","Жылдам басқаруды өңдеу"],
+  ["qc_show_area","Show quick controls","显示快速控制","Показать быстрые кнопки","Показати швидкі кнопки","Жылдам түймелерді көрсету"],
+  ["qc_add","Add control","添加控制","Добавить кнопку","Додати кнопку","Түйме қосу"],
+  ["qc_edit","Edit control","编辑控制","Изменить кнопку","Змінити кнопку","Түймені өңдеу"],
+  ["qc_hide","Hide control","隐藏控制","Скрыть кнопку","Приховати кнопку","Түймені жасыру"],
+  ["qc_show","Show control","显示控制","Показать кнопку","Показати кнопку","Түймені көрсету"],
+  ["qc_up","Move up","上移","Выше","Вище","Жоғары"],
+  ["qc_down","Move down","下移","Ниже","Нижче","Төмен"],
+  ["qc_delete","Delete control","删除控制","Удалить кнопку","Видалити кнопку","Түймені жою"],
+  ["qc_empty","No controls yet.","还没有快捷控制。","Кнопок пока нет.","Кнопок поки немає.","Түймелер әлі жоқ."],
+  ["qc_name","Name","名称","Название","Назва","Атауы"],
+  ["qc_package","App package","应用包名","Пакет приложения","Пакет застосунку","Қолданба бумасы"],
+  ["qc_component","Component class","组件类名","Класс компонента","Клас компонента","Компонент класы"],
+  ["qc_action","Intent action (optional)","Intent 动作（选填）","Действие Intent (необязательно)","Дія Intent (необов’язково)","Intent әрекеті (міндетті емес)"],
+  ["qc_uri","Data URI (optional)","数据 URI（选填）","URI данных (необязательно)","URI даних (необов’язково)","Дерек URI (міндетті емес)"],
+  ["qc_extras","Extras (JSON object)","附加参数（JSON 对象）","Параметры (объект JSON)","Параметри (об’єкт JSON)","Параметрлер (JSON нысаны)"],
+  ["qc_app","Open app","打开应用","Открыть приложение","Відкрити застосунок","Қолданбаны ашу"],
+  ["qc_activity","Custom activity","自定义 Activity","Свой Activity","Власна Activity","Өз Activity"],
+  ["qc_broadcast","Custom broadcast","自定义广播","Своя рассылка","Власна розсилка","Өз хабар таратуы"],
+  ["qc_save","Save","保存","Сохранить","Зберегти","Сақтау"],
+  ["qc_run","Run","执行","Запустить","Запустити","Іске қосу"],
+  ["qc_sent","Request sent to the app.","请求已发送给应用。","Запрос отправлен приложению.","Запит надіслано застосунку.","Сұрау қолданбаға жіберілді."],
+  ["qc_unavailable","This control is unavailable. Check the app and its settings.","此控制不可用，请检查目标应用及其设置。","Кнопка недоступна. Проверьте приложение и его настройки.","Кнопка недоступна. Перевірте застосунок і його налаштування.","Бұл түйме қолжетімсіз. Қолданба мен баптауларын тексеріңіз."],
+  ["qc_invalid","Check the name, target and parameters.","请检查名称、目标和参数。","Проверьте название, цель и параметры.","Перевірте назву, ціль і параметри.","Атауын, нысанын және параметрлерін тексеріңіз."],
+  ["qc_failed","The TV could not run this control.","电视无法执行此控制。","Телевизор не смог выполнить команду.","Телевізор не зміг виконати команду.","Теледидар бұл пәрменді орындай алмады."],
+  ["qc_limit","You can add up to 12 controls.","最多可添加 12 个控制。","Можно добавить до 12 кнопок.","Можна додати до 12 кнопок.","12 түймеге дейін қосуға болады."],
+  ["qc_conflict","Controls changed. Refresh and try again.","控制列表已更新，请刷新后重试。","Список изменился. Обновите его и повторите.","Список змінився. Оновіть його й повторіть.","Тізім өзгерді. Жаңартып, қайта көріңіз."],
+  ["qc_background","Open Aerial on the TV before running this control.","请先在电视上打开 Aerial，再执行此控制。","Откройте Aerial на телевизоре перед запуском.","Відкрийте Aerial на телевізорі перед запуском.","Іске қоспас бұрын теледидарда Aerial ашыңыз."],
+  ["qc_restricted","Quick controls are disabled in Kids and Elders mode.","儿童与长辈模式下不能执行快捷控制。","В детском и пожилом режимах быстрые кнопки отключены.","У дитячому й літньому режимах швидкі кнопки вимкнено.","Балалар мен қарттар режимінде жылдам түймелер өшірулі."],
+  ["qc_locked","Enter the parental PIN first.","请先输入家长密码。","Сначала введите родительский PIN.","Спочатку введіть батьківський PIN.","Алдымен ата-ана PIN кодын енгізіңіз."],
+  ["qc_phone_hint","Edit the TV’s buttons or run them here. Changes also appear in Control Center.","在此编辑或执行电视上的按钮，改动会同步到控制中心。","Здесь можно настроить и запустить кнопки телевизора. Изменения появятся в Пункте управления.","Тут можна налаштувати й запустити кнопки телевізора. Зміни з’являться в Центрі керування.","Теледидар түймелерін осы жерден өңдеңіз немесе іске қосыңыз. Өзгерістер Басқару орталығында көрінеді."],
+  ["qc_kind","Control type","控制类型","Тип кнопки","Тип кнопки","Түйме түрі"],
+  ["qc_hidden","Hidden","已隐藏","Скрыто","Приховано","Жасырылған"],
+  ["qc_app_pick","Choose an installed app","选择已安装应用","Выберите приложение","Виберіть застосунок","Орнатылған қолданбаны таңдаңыз"],
+  ["qc_pin","Parental PIN","家长密码","Родительский PIN","Батьківський PIN","Ата-ана PIN коды"],
+]) {
+  KEYS.push(key);
+  for (const [lang, value] of Object.entries({ en, zh, ru, uk, kk })) TEXTS[lang].push(value);
+}
 const LANGS = Object.keys(TEXTS);
 const LANG = (() => {
   const asked = new URLSearchParams(location.search).get('lang');
@@ -2398,6 +2463,136 @@ function kidsSettings() {
 $('#kidsPinForm').onsubmit = e => { e.preventDefault(); const v = $('#kidsPin').value.trim(); if (v.length === 4) kidsUnlock(v); };
 $('#kidsPin').oninput = e => { const v = e.target.value.trim(); if (v.length === 4) kidsUnlock(v); };
 
+/* Quick controls share the TV's saved order and use its revision for every change or run. */
+let quickBusy = false;
+let quickRendered = '';
+const quickKinds = { clash: 'Clash Meta', app: t('qc_app'), activity: t('qc_activity'), broadcast: t('qc_broadcast') };
+async function quickRequest(op, fields = {}, revision = state?.quickControls?.revision) {
+  if (quickBusy) return false;
+  quickBusy = true;
+  try {
+    const next = await api('api/quick-controls', { op, revision: String(revision ?? ''), ...fields });
+    take(next);
+    if (!next.saved) {
+      const key = next.quickError === 'missing' ? 'conflict' : next.quickError;
+      toast(t(['locked', 'conflict', 'limit', 'invalid', 'unavailable', 'background', 'restricted', 'failed'].includes(key) ? 'qc_' + key : 'toast_set_fail'));
+      return false;
+    }
+    toast(t(op === 'run' ? 'qc_sent' : op === 'unlock' ? 'kids_unlock' : 'toast_tv_updated'));
+    return true;
+  } catch (_) { toast(t('toast_set_fail')); return false; }
+  finally { quickBusy = false; renderQuickControls(); }
+}
+
+function renderQuickControls() {
+  const q = state?.quickControls;
+  $('#quickBox').hidden = !q;
+  if (!q) return;
+  $('#quickShow').checked = q.enabled;
+  $('#quickPinForm').hidden = !state.kids?.pinSet;
+  $('#quickPin').inputMode = state.kids?.pinArrows ? 'text' : 'numeric';
+  $('#quickAdd').disabled = q.items.length >= 12;
+  const stamp = JSON.stringify([q, state.kids?.active]);
+  if (stamp === quickRendered) return;
+  quickRendered = stamp;
+  const list = $('#quickRows'); list.replaceChildren();
+  if (!q.items.length) { list.append(el('div', 'item', t('qc_empty'))); return; }
+  q.items.forEach((control, index) => {
+    const row = el('div', 'item');
+    const title = el('span', 'txt', control.title);
+    title.append(el('span', 'sub', quickKinds[control.kind] + (control.enabled ? '' : ' · ' + t('qc_hidden'))));
+    const buttons = el('div', 'qc-buttons');
+    const run = el('button', 'link', t('qc_run'));
+    run.disabled = !q.enabled || !control.enabled || state.kids?.active;
+    run.onclick = () => quickRequest('run', { id: control.id }, q.revision);
+    const edit = el('button', 'link', t('qc_edit'));
+    edit.onclick = () => quickEditor(control, index);
+    buttons.append(run, edit); row.append(title, buttons); list.append(row);
+  });
+}
+
+function quickEditor(control, index) {
+  const q = state.quickControls;
+  const editing = !!control;
+  const initial = control || { title: 'Clash Meta', kind: 'clash', enabled: true };
+  openSheet(body => {
+    body.append(el('h2', 'big', t(editing ? 'qc_edit' : 'qc_add')));
+    const form = el('form', 'qc-form');
+    function field(key, tag, value, limit) {
+      const label = el('label'); label.append(el('span', '', t(key)));
+      const input = el(tag); input.autocomplete = 'off';
+      if (tag !== 'select') input.value = value || '';
+      if (limit) input.maxLength = limit;
+      label.append(input); form.append(label); return { label, input };
+    }
+    const kind = field('qc_kind', 'select');
+    for (const [value, label] of Object.entries(quickKinds)) kind.input.append(new Option(label, value));
+    kind.input.value = initial.kind;
+    const title = field('qc_name', 'input', initial.title, 64);
+    title.input.required = true;
+    const apps = field('qc_app_pick', 'select');
+    apps.input.append(new Option(t('qc_app_pick'), ''));
+    for (const app of state.apps || []) {
+      if (!app.source && /^[A-Za-z][\w]*(\.[\w]+)+$/.test(app.key)) apps.input.append(new Option(app.label, app.key));
+    }
+    const pkg = field('qc_package', 'input', initial.pkg, 200);
+    const component = field('qc_component', 'input', initial.component, 250);
+    const actionField = field('qc_action', 'input', initial.action, 250);
+    const uri = field('qc_uri', 'input', initial.uri, 2048);
+    const extras = field('qc_extras', 'textarea', initial.extras || '{}', 8192);
+    extras.input.rows = 2;
+    function fieldsForKind() {
+      const type = kind.input.value;
+      apps.label.hidden = type !== 'app';
+      pkg.label.hidden = type === 'clash'; pkg.input.required = type !== 'clash';
+      const explicit = type === 'activity' || type === 'broadcast';
+      for (const f of [component, actionField, uri, extras]) f.label.hidden = !explicit;
+      component.input.required = explicit;
+    }
+    kind.input.onchange = () => {
+      if (!editing && (title.input.value === 'Clash Meta' || !title.input.value)) title.input.value = kind.input.value === 'clash' ? 'Clash Meta' : '';
+      fieldsForKind();
+    };
+    apps.input.onchange = () => {
+      const app = (state.apps || []).find(a => a.key === apps.input.value);
+      if (app) { pkg.input.value = app.key; if (!title.input.value) title.input.value = app.label.slice(0, 64); }
+    };
+    fieldsForKind();
+    const buttons = el('div', 'qc-buttons');
+    const save = el('button', 'btn', t('qc_save')); save.type = 'submit';
+    const cancel = el('button', 'btn plain', t('cancel')); cancel.type = 'button'; cancel.onclick = closeSheet;
+    buttons.append(save, cancel); form.append(buttons); body.append(form);
+    form.onsubmit = async e => {
+      e.preventDefault(); save.disabled = true;
+      const type = kind.input.value;
+      const explicit = type === 'activity' || type === 'broadcast';
+      const item = { id: initial.id || '', title: title.input.value, kind: type, enabled: initial.enabled,
+        pkg: type === 'clash' ? '' : pkg.input.value, component: explicit ? component.input.value : '',
+        action: explicit ? actionField.input.value : '', uri: explicit ? uri.input.value : '', extras: explicit ? extras.input.value : '{}' };
+      if (await quickRequest(editing ? 'update' : 'add', { id: item.id, item: JSON.stringify(item) }, q.revision)) closeSheet();
+      save.disabled = false;
+    };
+    if (editing) {
+      const choices = el('div', 'list');
+      const command = (op, args) => async () => {
+        if (await quickRequest(op, { id: control.id, ...args }, q.revision)) closeSheet();
+      };
+      action(choices, t(control.enabled ? 'qc_hide' : 'qc_show'), '', command('toggle', { on: control.enabled ? '0' : '1' }));
+      if (index > 0) action(choices, t('qc_up'), '', command('move', { delta: '-1' }));
+      if (index < q.items.length - 1) action(choices, t('qc_down'), '', command('move', { delta: '1' }));
+      action(choices, t('qc_delete'), 'danger', command('delete', {})); body.append(choices);
+    }
+  });
+}
+
+$('#quickShow').onchange = () => quickRequest('enabled', { on: $('#quickShow').checked ? '1' : '0' });
+$('#quickAdd').onclick = () => quickEditor(null, -1);
+$('#quickPinForm').onsubmit = async e => {
+  e.preventDefault(); kidsPin = $('#quickPin').value.trim().toUpperCase();
+  $('#quickPin').value = '';
+  if (!await quickRequest('unlock')) kidsPin = '';
+};
+
 function render() {
   if (!state) return;
   // The page polls; skip the rebuild when nothing changed, so pictures do not flicker and taps are not lost.
@@ -2408,6 +2603,7 @@ function render() {
   renderWallpapers();
   renderScreensaver();
   renderMore();
+  renderQuickControls();
   renderInputs();
   renderArrange(false);
 }

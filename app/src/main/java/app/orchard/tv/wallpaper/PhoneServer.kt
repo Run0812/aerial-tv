@@ -18,6 +18,10 @@ import app.orchard.tv.apps.SourceDevice
 import app.orchard.tv.apps.SourceLooks
 import app.orchard.tv.apps.TileArtFactory
 import app.orchard.tv.settings.AerialSettings
+import app.orchard.tv.settings.QuickAction
+import app.orchard.tv.settings.QuickControls
+import app.orchard.tv.system.QuickActionRunner
+import app.orchard.tv.BuildConfig
 import app.orchard.tv.settings.KidsLock
 import app.orchard.tv.settings.Restricted
 import app.orchard.tv.settings.RestrictedKind
@@ -62,6 +66,7 @@ class PhoneServer private constructor(private val context: Context, private val 
         if (!uri.startsWith(prefix)) return text(Response.Status.NOT_FOUND, "Not found")
         val path = uri.removePrefix(prefix).ifEmpty { "/" }
         return runCatching {
+            if (session.method == Method.POST && path == "/api/quick-controls") return quickControls(session)
             // In Kids and Elders mode the page changes nothing without the parental PIN: anyone on
             // the network with the address (a child with a phone) could otherwise undo the mode.
             // The page sends it with each change once it is entered (header X-Aerial-Pin).
@@ -241,6 +246,7 @@ class PhoneServer private constructor(private val context: Context, private val 
             .put("videoRoom", ScreensaverVideos.room(context))
             .put("focusStyle", AerialSettings.focusStyle.key)
             .put("kids", kidsState())
+            .put("quickControls", QuickControls.store.json())
             .put("wallpaperAlwaysMoves", AerialSettings.wallpaperAlwaysMoves)
             .put("showWeather", AerialSettings.showWeather)
             .put("screensaverClock", AerialSettings.screensaverClock)
@@ -433,6 +439,41 @@ class PhoneServer private constructor(private val context: Context, private val 
     private fun tooLarge(session: IHTTPSession): Boolean =
         (session.headers["content-length"]?.toLongOrNull() ?: 0L) > MAX_UPLOAD
 
+    private fun quickControls(session: IHTTPSession): Response {
+        if ((session.headers["content-length"]?.toLongOrNull() ?: 0L) > 128 * 1024) {
+            return json(state().put("saved", false).put("quickError", "invalid"))
+        }
+        val fields = form(session)
+        val error = runBlocking(Dispatchers.Main) {
+            val store = QuickControls.store
+            val op = fields["op"].orEmpty()
+            val id = fields["id"].orEmpty()
+            val revision = fields["revision"]?.toLongOrNull()
+            when {
+                (AerialSettings.pinSet || Restricted.active) && !pinOk(session.headers["x-aerial-pin"]) -> "locked"
+                op == "unlock" -> null
+                revision == null || revision != store.revision -> "conflict"
+                op == "run" -> {
+                    val control = store.items.firstOrNull { it.id == id && it.enabled }
+                    when {
+                        Restricted.active -> "restricted"
+                        !store.enabled || control == null -> "unavailable"
+                        Build.VERSION.SDK_INT >= 29 && control.kind != "broadcast" && !KidsWatch.homeInFront -> "background"
+                        else -> when (val result = QuickActionRunner.run(context, control)) {
+                            QuickActionRunner.Result.Sent -> null
+                            else -> result.name.lowercase()
+                        }
+                    }
+                }
+                else -> {
+                    val control = fields["item"]?.let { runCatching { QuickAction.from(JSONObject(it)) }.getOrNull() }
+                    store.change(op, id, control, fields["on"] == "1", fields["delta"]?.toIntOrNull() ?: 0, revision)
+                }
+            }
+        }
+        return json(state().put("saved", error == null).put("quickError", error ?: ""))
+    }
+
     private fun form(session: IHTTPSession): Map<String, String> {
         session.parseBody(HashMap())
         return session.parameters.mapValues { it.value.firstOrNull().orEmpty() }
@@ -526,7 +567,7 @@ class PhoneServer private constructor(private val context: Context, private val 
     private fun text(status: Response.Status, msg: String) = newFixedLengthResponse(status, "text/plain; charset=utf-8", msg)
 
     companion object {
-        const val PORT = 8790
+        val PORT = if (BuildConfig.APPLICATION_ID.endsWith(".shortcuts")) 8791 else 8790
         private const val TAG = "AerialPhone"
         /** Enough for a batch of phone photos at full size. */
         private const val MAX_UPLOAD = 200L * 1024 * 1024

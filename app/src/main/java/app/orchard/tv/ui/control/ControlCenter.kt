@@ -96,7 +96,8 @@ import app.orchard.tv.settings.Restricted
 import app.orchard.tv.settings.RestrictedKind
 import app.orchard.tv.ui.home.kidsTimeLine
 import app.orchard.tv.system.HomeStatus
-import app.orchard.tv.system.ClashShortcut
+import app.orchard.tv.settings.QuickControls
+import app.orchard.tv.system.QuickActionRunner
 import app.orchard.tv.system.LaunchFallback
 import app.orchard.tv.system.NetKind
 import app.orchard.tv.system.SourceKind
@@ -143,7 +144,7 @@ fun ControlCenter(
             CcPage.Main -> onClose()
             CcPage.Inputs -> vm.overlay = Overlay.ControlCenter(CcPage.Main)
             CcPage.InputSettings -> vm.overlay = Overlay.ControlCenter(CcPage.Inputs)
-            CcPage.Update, CcPage.Setup -> vm.overlay = Overlay.ControlCenter(CcPage.Main)
+            CcPage.QuickControls, CcPage.Update, CcPage.Setup -> vm.overlay = Overlay.ControlCenter(CcPage.Main)
         }
     }
 
@@ -206,6 +207,7 @@ fun ControlCenter(
                             CcPage.Main -> if (Restricted.active) KidsPage(vm, now, visible) else MainPage(vm, now, visible, onOpen)
                             CcPage.Inputs -> InputsPage(vm, visible, onOpen)
                             CcPage.InputSettings -> InputSettingsPage(vm, visible)
+                            CcPage.QuickControls -> if (Restricted.active) KidsPage(vm, now, visible) else QuickControlsPage(vm, visible)
                             CcPage.Update -> UpdatePage(vm, visible)
                             CcPage.Setup -> SetupPage(vm, visible, onOpen)
                         }
@@ -339,27 +341,29 @@ private fun MainPage(vm: HomeViewModel, now: LocalDateTime, takeFocus: Boolean, 
         Spacer(Modifier.height(6.dp))
         BrightnessRow(vm)
 
-        if (AerialSettings.clashShortcut) {
+        val quick = QuickControls.store
+        if (quick.enabled && quick.items.any { it.enabled }) {
             Spacer(Modifier.height(8.dp))
             BasicText(
-                stringResource(R.string.cc_shortcuts), style = Type.Caption,
+                stringResource(R.string.qc_title), style = Type.Caption,
                 modifier = Modifier.padding(start = 14.dp, bottom = 2.dp),
             )
-            MenuRow(
-                Glyph.Switches, stringResource(R.string.cc_clash),
-                trailing = stringResource(R.string.cc_clash_toggle),
-                onClick = {
-                    vm.whenUnlocked {
-                        val message = when (ClashShortcut.toggle(context)) {
-                            ClashShortcut.Result.Sent -> R.string.cc_clash_requested
-                            ClashShortcut.Result.Unavailable -> R.string.cc_clash_unavailable
-                            ClashShortcut.Result.Failed -> R.string.cc_clash_failed
+            quick.items.filter { it.enabled }.forEach { control ->
+                androidx.compose.runtime.key(control.id) {
+                    MenuRow(Glyph.Switches, control.title, trailing = stringResource(R.string.qc_run), onClick = {
+                        vm.whenUnlocked {
+                            val current = quick.items.firstOrNull { it.id == control.id && it.enabled }
+                            val result = if (!quick.enabled || current == null || Restricted.active) QuickActionRunner.Result.Unavailable
+                            else QuickActionRunner.run(context, current)
+                            vm.notify(context.getString(result.message), Glyph.Switches)
                         }
-                        vm.notify(context.getString(message), Glyph.Switches)
-                    }
-                },
-            )
+                    })
+                }
+            }
         }
+        MenuRow(Glyph.Pencil, stringResource(R.string.qc_edit_area), trailing = "›", onClick = {
+            vm.whenUnlocked { vm.overlay = Overlay.ControlCenter(CcPage.QuickControls) }
+        })
 
         Spacer(Modifier.height(6.dp))
         // A parent left Kids and Elders mode: one press back into it, no PIN.

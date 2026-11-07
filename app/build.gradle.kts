@@ -24,7 +24,7 @@ android {
         manifestPlaceholders["aerialLabel"] = "@string/app_name"
         // Fork-only test builds coexist with the official app and keep its data intact.
         if (project.hasProperty("shortcutTest")) {
-            versionCode = 119
+            versionCode = 120
             applicationIdSuffix = ".shortcuts"
             versionNameSuffix = "-shortcuts-test"
             resValue("string", "shortcut_test_name", "Aerial Shortcuts Test")

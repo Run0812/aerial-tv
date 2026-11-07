@@ -317,4 +317,42 @@
     <string name="cc_clash_requested">Toggle requested. If nothing happens, open Clash Meta to check its profile and VPN approval.</string>
     <string name="cc_clash_unavailable">Clash Meta external control is unavailable. Check that the official client is installed and enabled.</string>
     <string name="cc_clash_failed">Unable to control Clash Meta. Open the client and check its settings.</string>
+
+    <!-- Editable quick controls. -->
+    <string name="qc_title">Quick controls</string>
+    <string name="qc_edit_area">Edit quick controls</string>
+    <string name="qc_show_area">Show quick controls</string>
+    <string name="qc_add">Add control</string>
+    <string name="qc_edit">Edit control</string>
+    <string name="qc_hide">Hide control</string>
+    <string name="qc_show">Show control</string>
+    <string name="qc_up">Move up</string>
+    <string name="qc_down">Move down</string>
+    <string name="qc_delete">Delete control</string>
+    <string name="qc_empty">No controls yet.</string>
+    <string name="qc_name">Name</string>
+    <string name="qc_package">App package</string>
+    <string name="qc_component">Component class</string>
+    <string name="qc_action">Intent action (optional)</string>
+    <string name="qc_uri">Data URI (optional)</string>
+    <string name="qc_extras">Extras (JSON object)</string>
+    <string name="qc_app">Open app</string>
+    <string name="qc_activity">Custom activity</string>
+    <string name="qc_broadcast">Custom broadcast</string>
+    <string name="qc_save">Save</string>
+    <string name="qc_run">Run</string>
+    <string name="qc_sent">Request sent to the app.</string>
+    <string name="qc_unavailable">This control is unavailable. Check the app and its settings.</string>
+    <string name="qc_invalid">Check the name, target and parameters.</string>
+    <string name="qc_failed">The TV could not run this control.</string>
+    <string name="qc_limit">You can add up to 12 controls.</string>
+    <string name="qc_conflict">Controls changed. Refresh and try again.</string>
+    <string name="qc_background">Open Aerial on the TV before running this control.</string>
+    <string name="qc_restricted">Quick controls are disabled in Kids and Elders mode.</string>
+    <string name="qc_locked">Enter the parental PIN first.</string>
+    <string name="qc_phone_hint">Edit the TV’s buttons or run them here. Changes also appear in Control Center.</string>
+    <string name="qc_kind">Control type</string>
+    <string name="qc_hidden">Hidden</string>
+    <string name="qc_app_pick">Choose an installed app</string>
+    <string name="qc_pin">Parental PIN</string>
 </resources>

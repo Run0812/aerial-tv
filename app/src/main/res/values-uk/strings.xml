@@ -309,4 +309,42 @@
     <string name="cc_clash_requested">Запит надіслано. Якщо нічого не сталося, перевірте профіль і дозвіл VPN у Clash Meta.</string>
     <string name="cc_clash_unavailable">Зовнішнє керування Clash Meta недоступне. Перевірте встановлення та ввімкнення офіційного застосунку.</string>
     <string name="cc_clash_failed">Не вдалося керувати Clash Meta. Перевірте налаштування застосунку.</string>
+
+    <!-- Editable quick controls. -->
+    <string name="qc_title">Швидке керування</string>
+    <string name="qc_edit_area">Налаштувати керування</string>
+    <string name="qc_show_area">Показати швидкі кнопки</string>
+    <string name="qc_add">Додати кнопку</string>
+    <string name="qc_edit">Змінити кнопку</string>
+    <string name="qc_hide">Приховати кнопку</string>
+    <string name="qc_show">Показати кнопку</string>
+    <string name="qc_up">Вище</string>
+    <string name="qc_down">Нижче</string>
+    <string name="qc_delete">Видалити кнопку</string>
+    <string name="qc_empty">Кнопок поки немає.</string>
+    <string name="qc_name">Назва</string>
+    <string name="qc_package">Пакет застосунку</string>
+    <string name="qc_component">Клас компонента</string>
+    <string name="qc_action">Дія Intent (необов’язково)</string>
+    <string name="qc_uri">URI даних (необов’язково)</string>
+    <string name="qc_extras">Параметри (об’єкт JSON)</string>
+    <string name="qc_app">Відкрити застосунок</string>
+    <string name="qc_activity">Власна Activity</string>
+    <string name="qc_broadcast">Власна розсилка</string>
+    <string name="qc_save">Зберегти</string>
+    <string name="qc_run">Запустити</string>
+    <string name="qc_sent">Запит надіслано застосунку.</string>
+    <string name="qc_unavailable">Кнопка недоступна. Перевірте застосунок і його налаштування.</string>
+    <string name="qc_invalid">Перевірте назву, ціль і параметри.</string>
+    <string name="qc_failed">Телевізор не зміг виконати команду.</string>
+    <string name="qc_limit">Можна додати до 12 кнопок.</string>
+    <string name="qc_conflict">Список змінився. Оновіть його й повторіть.</string>
+    <string name="qc_background">Відкрийте Aerial на телевізорі перед запуском.</string>
+    <string name="qc_restricted">У дитячому й літньому режимах швидкі кнопки вимкнено.</string>
+    <string name="qc_locked">Спочатку введіть батьківський PIN.</string>
+    <string name="qc_phone_hint">Тут можна налаштувати й запустити кнопки телевізора. Зміни з’являться в Центрі керування.</string>
+    <string name="qc_kind">Тип кнопки</string>
+    <string name="qc_hidden">Приховано</string>
+    <string name="qc_app_pick">Виберіть застосунок</string>
+    <string name="qc_pin">Батьківський PIN</string>
 </resources>

@@ -309,4 +309,42 @@
     <string name="cc_clash_requested">Сұрау жіберілді. Өзгеріс болмаса, Clash Meta профилін және VPN рұқсатын тексеріңіз.</string>
     <string name="cc_clash_unavailable">Clash Meta сыртқы басқаруы қолжетімсіз. Ресми қолданбаның орнатылғанын және қосылғанын тексеріңіз.</string>
     <string name="cc_clash_failed">Clash Meta басқарылмады. Қолданба параметрлерін тексеріңіз.</string>
+
+    <!-- Editable quick controls. -->
+    <string name="qc_title">Жылдам басқару</string>
+    <string name="qc_edit_area">Жылдам басқаруды өңдеу</string>
+    <string name="qc_show_area">Жылдам түймелерді көрсету</string>
+    <string name="qc_add">Түйме қосу</string>
+    <string name="qc_edit">Түймені өңдеу</string>
+    <string name="qc_hide">Түймені жасыру</string>
+    <string name="qc_show">Түймені көрсету</string>
+    <string name="qc_up">Жоғары</string>
+    <string name="qc_down">Төмен</string>
+    <string name="qc_delete">Түймені жою</string>
+    <string name="qc_empty">Түймелер әлі жоқ.</string>
+    <string name="qc_name">Атауы</string>
+    <string name="qc_package">Қолданба бумасы</string>
+    <string name="qc_component">Компонент класы</string>
+    <string name="qc_action">Intent әрекеті (міндетті емес)</string>
+    <string name="qc_uri">Дерек URI (міндетті емес)</string>
+    <string name="qc_extras">Параметрлер (JSON нысаны)</string>
+    <string name="qc_app">Қолданбаны ашу</string>
+    <string name="qc_activity">Өз Activity</string>
+    <string name="qc_broadcast">Өз хабар таратуы</string>
+    <string name="qc_save">Сақтау</string>
+    <string name="qc_run">Іске қосу</string>
+    <string name="qc_sent">Сұрау қолданбаға жіберілді.</string>
+    <string name="qc_unavailable">Бұл түйме қолжетімсіз. Қолданба мен баптауларын тексеріңіз.</string>
+    <string name="qc_invalid">Атауын, нысанын және параметрлерін тексеріңіз.</string>
+    <string name="qc_failed">Теледидар бұл пәрменді орындай алмады.</string>
+    <string name="qc_limit">12 түймеге дейін қосуға болады.</string>
+    <string name="qc_conflict">Тізім өзгерді. Жаңартып, қайта көріңіз.</string>
+    <string name="qc_background">Іске қоспас бұрын теледидарда Aerial ашыңыз.</string>
+    <string name="qc_restricted">Балалар мен қарттар режимінде жылдам түймелер өшірулі.</string>
+    <string name="qc_locked">Алдымен ата-ана PIN кодын енгізіңіз.</string>
+    <string name="qc_phone_hint">Теледидар түймелерін осы жерден өңдеңіз немесе іске қосыңыз. Өзгерістер Басқару орталығында көрінеді.</string>
+    <string name="qc_kind">Түйме түрі</string>
+    <string name="qc_hidden">Жасырылған</string>
+    <string name="qc_app_pick">Орнатылған қолданбаны таңдаңыз</string>
+    <string name="qc_pin">Ата-ана PIN коды</string>
 </resources>
