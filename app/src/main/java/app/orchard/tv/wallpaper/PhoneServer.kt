@@ -383,11 +383,8 @@ class PhoneServer private constructor(private val context: Context, private val 
         val pkg = session.parameters["app"]?.firstOrNull().orEmpty()
         val id = session.parameters["id"]?.firstOrNull().orEmpty()
         val bitmap = LauncherQuickShortcuts.icon(context, pkg, id) ?: return text(Response.Status.NOT_FOUND, "")
-        val bytes = try {
-            ByteArrayOutputStream().apply { bitmap.compress(Bitmap.CompressFormat.PNG, 100, this) }.toByteArray()
-        } finally {
-            bitmap.recycle()
-        }
+        // The drawable may return a bitmap shared with its resource cache.
+        val bytes = ByteArrayOutputStream().apply { bitmap.compress(Bitmap.CompressFormat.PNG, 100, this) }.toByteArray()
         return newFixedLengthResponse(Response.Status.OK, "image/png", ByteArrayInputStream(bytes), bytes.size.toLong()).apply {
             addHeader("Cache-Control", "no-store")
         }
