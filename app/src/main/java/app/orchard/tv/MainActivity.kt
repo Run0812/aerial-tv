@@ -86,6 +86,7 @@ import app.orchard.tv.system.MissingClipboard
 import app.orchard.tv.system.Sounds
 import app.orchard.tv.system.NetKind
 import app.orchard.tv.system.SystemProbe
+import app.orchard.tv.system.QuickActionRunner
 import app.orchard.tv.system.HisenseSources
 import app.orchard.tv.system.KonkaSources
 import app.orchard.tv.system.HomeReopen
@@ -958,6 +959,7 @@ class MainActivity : ComponentActivity() {
     private fun resumeWork() {
         vm.resumed = true
         KidsWatch.homeInFront = true
+        QuickActionRunner.foreground = quickControlHost
         idleHandler.removeCallbacks(endHomeBounce)
         vm.homeBounce = false
         DiagLog.i("onResume; screensaver after ${idleBeforeScreensaver() / 1000} s")
@@ -996,6 +998,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onPause() {
         super.onPause()
+        if (QuickActionRunner.foreground === quickControlHost) QuickActionRunner.foreground = null
         if (locked) return
         vm.resumed = false
         KidsWatch.homeInFront = false
@@ -1035,6 +1038,13 @@ class MainActivity : ComponentActivity() {
     }
 
     /** Opens an app, growing it out of its tile. */
+    private val quickControlHost = QuickActionRunner.Foreground(
+        launch = { app -> vm.overlay = Overlay.None; launch(app, null) },
+        open = { intent -> vm.overlay = Overlay.None; open(intent) },
+        showInputs = { vm.showInputs() },
+        closePanel = { vm.overlay = Overlay.None },
+    )
+
     private fun launch(app: AppEntry, bounds: Rect?) {
         // Kids and Elders mode shows only its own tiles, and none while locked; this is the last word.
         if (Restricted.active && (app.key !in Restricted.allowed || Restricted.lock != null)) {

@@ -18,6 +18,13 @@ import app.orchard.tv.apps.SourceDevice
 import app.orchard.tv.apps.SourceLooks
 import app.orchard.tv.apps.TileArtFactory
 import app.orchard.tv.settings.AerialSettings
+import app.orchard.tv.settings.QuickControlStore
+import app.orchard.tv.settings.QuickControls
+import app.orchard.tv.settings.QuickEdit
+import app.orchard.tv.settings.QuickTarget
+import app.orchard.tv.system.QuickActionRunner
+import app.orchard.tv.system.QuickCatalog
+import app.orchard.tv.system.LauncherQuickShortcuts
 import app.orchard.tv.settings.KidsLock
 import app.orchard.tv.settings.Restricted
 import app.orchard.tv.settings.RestrictedKind
@@ -62,6 +69,7 @@ class PhoneServer private constructor(private val context: Context, private val 
         if (!uri.startsWith(prefix)) return text(Response.Status.NOT_FOUND, "Not found")
         val path = uri.removePrefix(prefix).ifEmpty { "/" }
         return runCatching {
+            if (session.method == Method.POST && path == "/api/quick-controls") return quickControls(session)
             // In Kids and Elders mode the page changes nothing without the parental PIN: anyone on
             // the network with the address (a child with a phone) could otherwise undo the mode.
             // The page sends it with each change once it is entered (header X-Aerial-Pin).
@@ -132,6 +140,7 @@ class PhoneServer private constructor(private val context: Context, private val 
                     json(state().put("removed", removed))
                 }
                 path.startsWith("/tile/") -> tile(java.net.URLDecoder.decode(path.removePrefix("/tile/"), "UTF-8"), own = session.parameters["art"]?.firstOrNull() == "own")
+                session.method == Method.GET && path == "/shortcut-icon" -> shortcutIcon(session)
                 path.startsWith("/library/") -> libraryPicture(java.net.URLDecoder.decode(path.removePrefix("/library/"), "UTF-8"))
                 session.method == Method.POST && path == "/api/icon" -> icon(session)
                 session.method == Method.POST && path == "/api/source/name" -> {
@@ -241,6 +250,10 @@ class PhoneServer private constructor(private val context: Context, private val 
             .put("videoRoom", ScreensaverVideos.room(context))
             .put("focusStyle", AerialSettings.focusStyle.key)
             .put("kids", kidsState())
+            .put("quickControls", QuickControls.store.json(QuickCatalog::displayJson).apply {
+                put("limit", QuickControlStore.MAX_ITEMS)
+                put("muted", app.orchard.tv.system.SystemProbe.volume(context).muted)
+            })
             .put("wallpaperAlwaysMoves", AerialSettings.wallpaperAlwaysMoves)
             .put("showWeather", AerialSettings.showWeather)
             .put("screensaverClock", AerialSettings.screensaverClock)
@@ -366,6 +379,20 @@ class PhoneServer private constructor(private val context: Context, private val 
         }
     }
 
+    private fun shortcutIcon(session: IHTTPSession): Response {
+        if (!quickAuthorized(session)) return text(Response.Status.FORBIDDEN, "")
+        val pkg = session.parameters["app"]?.firstOrNull().orEmpty()
+        val id = session.parameters["id"]?.firstOrNull().orEmpty()
+        val target = QuickTarget.parse("shortcut:$pkg:$id") as? QuickTarget.Shortcut
+        if (target == null || target.pkg != pkg || QuickCatalog.app(pkg) == null) return text(Response.Status.NOT_FOUND, "")
+        val bitmap = LauncherQuickShortcuts.icon(context, target) ?: return text(Response.Status.NOT_FOUND, "")
+        // The drawable may return a bitmap shared with its resource cache.
+        val bytes = ByteArrayOutputStream().apply { bitmap.compress(Bitmap.CompressFormat.PNG, 100, this) }.toByteArray()
+        return newFixedLengthResponse(Response.Status.OK, "image/png", ByteArrayInputStream(bytes), bytes.size.toLong()).apply {
+            addHeader("Cache-Control", "no-store")
+        }
+    }
+
     /** The icon library's picture of an app, as downloaded. */
     private fun libraryPicture(pkg: String): Response {
         val f = IconLibrary.file(pkg) ?: return text(Response.Status.NOT_FOUND, "")
@@ -433,6 +460,50 @@ class PhoneServer private constructor(private val context: Context, private val 
     private fun tooLarge(session: IHTTPSession): Boolean =
         (session.headers["content-length"]?.toLongOrNull() ?: 0L) > MAX_UPLOAD
 
+    private fun quickControls(session: IHTTPSession): Response {
+        // A plain cross-origin form cannot send this header. The phone page is served on this origin.
+        if (session.headers["x-aerial-quick-controls"] != "1") return text(Response.Status.FORBIDDEN, "")
+        if (!quickAuthorized(session)) return quickResponse("locked")
+        if ((session.headers["content-length"]?.toLongOrNull() ?: 0L) > 16 * 1024) {
+            return quickResponse("invalid")
+        }
+        val fields = form(session)
+        val op = fields["op"].orEmpty()
+        if (op == "catalog") {
+            return json(JSONObject().put("saved", true)
+                .put("shortcutsNeedHost", Build.VERSION.SDK_INT >= 25 && !LauncherQuickShortcuts.hasAccess(context))
+                .put("entries", JSONArray().apply { QuickCatalog.available(context).forEach { put(it.json()) } }))
+        }
+        if (op == "unlock") return quickResponse(null)
+        val id = fields["id"].orEmpty()
+        val revision = fields["revision"]?.toLongOrNull() ?: return quickResponse("conflict")
+        // Resolve catalog keys on the HTTP worker. Neither UI provides executable parameters.
+        val edit = when (op) {
+            "enabled" -> QuickEdit.EnableArea(fields["on"] == "1")
+            "add" -> QuickCatalog.available(context).firstOrNull { it.key == fields["key"] }?.let { QuickEdit.Add(it.control) }
+            "update" -> QuickEdit.Rename(id, fields["title"].orEmpty().trim())
+            "toggle" -> QuickEdit.Show(id, fields["on"] == "1")
+            "delete" -> QuickEdit.Remove(id)
+            "place" -> fields["position"]?.toIntOrNull()?.let { QuickEdit.Move(id, it) }
+            else -> null
+        }
+        val error = runBlocking(Dispatchers.Main) {
+            val store = QuickControls.store
+            when {
+                revision != store.revision -> "conflict"
+                op == "run" -> QuickActionRunner.run(context, id).takeUnless { it == QuickActionRunner.Result.Sent }?.name?.lowercase()
+                edit != null -> store.change(edit, revision)
+                else -> "invalid"
+            }
+        }
+        return quickResponse(error)
+    }
+
+    private fun quickAuthorized(session: IHTTPSession) =
+        (!AerialSettings.pinSet && !Restricted.active) || pinOk(session.headers["x-aerial-pin"])
+
+    private fun quickResponse(error: String?) = json(state().put("saved", error == null).put("quickError", error ?: ""))
+
     private fun form(session: IHTTPSession): Map<String, String> {
         session.parseBody(HashMap())
         return session.parameters.mapValues { it.value.firstOrNull().orEmpty() }
@@ -444,6 +515,7 @@ class PhoneServer private constructor(private val context: Context, private val 
      * The parental PIN, from the phone. Five wrong in a row and none is taken for a minute, so that
      * the 10 000 four-digit PINs cannot be tried from a phone in a few minutes.
      */
+    @Synchronized
     private fun pinOk(pin: String?): Boolean {
         val now = SystemClock.elapsedRealtime()
         if (pin.isNullOrEmpty() || now < pinRestUntil) return false
