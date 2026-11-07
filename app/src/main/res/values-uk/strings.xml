@@ -358,4 +358,5 @@
     <string name="qc_reorder">Перетягнути</string>
     <string name="qc_added">Додано</string>
     <string name="qc_exists">Цю кнопку вже додано.</string>
+    <string name="qc_mute">Без звуку</string>
 </resources>

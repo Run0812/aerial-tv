@@ -358,4 +358,5 @@
     <string name="qc_reorder">Ретін өзгерту үшін сүйреңіз</string>
     <string name="qc_added">Қосылды</string>
     <string name="qc_exists">Бұл түйме бұрын қосылған.</string>
+    <string name="qc_mute">Дыбыссыз</string>
 </resources>

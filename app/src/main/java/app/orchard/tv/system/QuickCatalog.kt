@@ -31,7 +31,7 @@ object QuickCatalog {
         if (context.packageManager.resolveActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS), 0) != null) {
             system("bluetooth", R.string.qc_bluetooth_settings, "bluetooth")
         }
-        system("mute", R.string.cc_muted, "mute")
+        system("mute", R.string.qc_mute, "mute")
         system("inputs", R.string.cc_inputs, "inputs")
         system("settings", R.string.cc_settings, "settings")
         AppCatalog.loaded.filter { it.source == null && it.folder == null && it.shortcut == null }

@@ -366,4 +366,5 @@
     <string name="qc_reorder">Drag to reorder</string>
     <string name="qc_added">Added</string>
     <string name="qc_exists">This control is already added.</string>
+    <string name="qc_mute">Mute</string>
 </resources>
