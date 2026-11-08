@@ -353,7 +353,9 @@
     <string name="qc_manual_uri">Data URI (optional)</string>
     <string name="qc_manual_extras">Extra parameters (JSON, optional)</string>
     <string name="qc_manual_hint">Copy a public entry point from the app documentation. A leading dot in the class name means the app package. Extra values may be strings, numbers, or booleans.</string>
-    <string name="qc_clash_toggle">Toggle</string>
+    <string name="qc_vpn_toggle">Toggle</string>
+    <string name="qc_vpn_connect">Connect</string>
+    <string name="qc_vpn_disconnect">Disconnect</string>
     <string name="qc_arrange_hint">Select a tile to rename, move, hide or remove it.</string>
     <string name="qc_rename">Rename</string>
     <string name="qc_remove">Remove</string>

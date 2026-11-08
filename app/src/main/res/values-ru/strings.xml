@@ -345,7 +345,9 @@
     <string name="qc_manual_uri">URI данных (необязательно)</string>
     <string name="qc_manual_extras">Дополнительные параметры (JSON, необязательно)</string>
     <string name="qc_manual_hint">Скопируйте открытый компонент из документации приложения. Точка в начале имени класса обозначает пакет приложения. Дополнительные значения могут быть строками, числами или логическими значениями.</string>
-    <string name="qc_clash_toggle">Переключить</string>
+    <string name="qc_vpn_toggle">Переключить</string>
+    <string name="qc_vpn_connect">Подключить</string>
+    <string name="qc_vpn_disconnect">Отключить</string>
     <string name="qc_arrange_hint">Выберите плитку, чтобы переименовать, переместить, скрыть или убрать.</string>
     <string name="qc_rename">Переименовать</string>
     <string name="qc_remove">Убрать</string>

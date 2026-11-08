@@ -1472,7 +1472,9 @@ for (const [key, en, zh, ru, uk, kk] of [
   ["qc_manual_uri","Data URI (optional)","数据 URI（选填）","URI данных (необязательно)","URI даних (необов’язково)","Деректер URI (міндетті емес)"],
   ["qc_manual_extras","Extra parameters (JSON, optional)","附加参数（JSON，选填）","Дополнительные параметры (JSON, необязательно)","Додаткові параметри (JSON, необов’язково)","Қосымша параметрлер (JSON, міндетті емес)"],
   ["qc_manual_hint","Copy a public entry point from the app documentation. A leading dot in the class name means the app package. Extra values may be strings, numbers, or booleans.","从应用文档复制公开入口。类名以 . 开头时会自动补全包名。附加参数的值可以是字符串、数字或布尔值。","Скопируйте открытый компонент из документации приложения. Точка в начале имени класса обозначает пакет приложения. Дополнительные значения могут быть строками, числами или логическими значениями.","Скопіюйте відкритий компонент із документації застосунку. Крапка на початку назви класу позначає пакет застосунку. Додаткові значення можуть бути рядками, числами або логічними значеннями.","Қолданба құжаттамасынан ашық компонентті көшіріңіз. Класс атауының басындағы нүкте қолданба пакетін білдіреді. Қосымша мәндер мәтін, сан немесе логикалық мән болуы мүмкін."],
-  ["qc_clash_toggle","Toggle","切换","Переключить","Перемкнути","Ауыстыру"],
+  ["qc_vpn_toggle","Toggle","切换","Переключить","Перемкнути","Ауыстыру"],
+  ["qc_vpn_connect","Connect","连接","Подключить","Підключити","Қосу"],
+  ["qc_vpn_disconnect","Disconnect","断开","Отключить","Відключити","Ажырату"],
   ["qc_rename","Rename","改名","Переименовать","Перейменувати","Атауын өзгерту"],
   ["qc_remove","Remove","移除","Убрать","Прибрати","Алып тастау"],
   ["qc_done","Done","完成","Готово","Готово","Дайын"],
@@ -2535,7 +2537,7 @@ function quickButton(title, entry, click) {
   const button = el('button','qc-control'); button.type = 'button';
   const icon = el('span','qc-icon'); icon.append(quickSymbol(entry));
   button.append(icon, el('span','qc-label',title));
-  if (entry.key === 'clash') button.append(el('span','qc-action-label',t('qc_clash_toggle')));
+  if (entry.vpnCommand) button.append(el('span','qc-action-label',t('qc_vpn_' + entry.vpnCommand)));
   button.onclick = click;
   return button;
 }
@@ -2617,7 +2619,9 @@ async function quickCatalog() {
       });
       if (chosen.has(entry.key)) {
         button.disabled = true; button.classList.add('qc-chosen');
-        button.append(el('span','qc-check','✓')); button.setAttribute('aria-label',entry.title + ' · ' + t('qc_added'));
+        button.append(el('span','qc-check','✓'));
+        const command = entry.vpnCommand ? ' · ' + t('qc_vpn_' + entry.vpnCommand) : '';
+        button.setAttribute('aria-label',entry.title + command + ' · ' + t('qc_added'));
       }
       grid.append(button);
     });

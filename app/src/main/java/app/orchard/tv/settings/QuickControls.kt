@@ -15,12 +15,33 @@ internal sealed interface QuickTarget {
     val icon: String
 
     enum class BuiltIn(override val key: String, override val icon: String) : QuickTarget {
-        Clash("clash", "vpn"), Network("system:network", "network"), Bluetooth("system:bluetooth", "bluetooth"),
+        Network("system:network", "network"), Bluetooth("system:bluetooth", "bluetooth"),
         Mute("system:mute", "mute"), Inputs("system:inputs", "inputs"), Settings("system:settings", "settings"),
     }
 
+    enum class Vpn(override val key: String, val client: Client, val command: Command) : QuickTarget {
+        Clash("clash", Client.Clash, Command.Toggle),
+        V2rayConnect("vpn:v2rayng:connect", Client.V2ray, Command.Connect),
+        V2rayDisconnect("vpn:v2rayng:disconnect", Client.V2ray, Command.Disconnect),
+        ShadowsocksConnect("vpn:shadowsocks:connect", Client.Shadowsocks, Command.Connect),
+        ShadowsocksDisconnect("vpn:shadowsocks:disconnect", Client.Shadowsocks, Command.Disconnect),
+        TailscaleConnect("vpn:tailscale:connect", Client.Tailscale, Command.Connect),
+        TailscaleDisconnect("vpn:tailscale:disconnect", Client.Tailscale, Command.Disconnect);
+
+        override val icon = "vpn"
+
+        enum class Client(val title: String) {
+            Clash("Clash Meta"), V2ray("v2rayNG"), Shadowsocks("Shadowsocks"), Tailscale("Tailscale"),
+        }
+
+        enum class Command(val code: String) {
+            Toggle("toggle"), Connect("connect"), Disconnect("disconnect"),
+        }
+    }
+
     companion object {
-        fun builtIn(key: String): BuiltIn? = BuiltIn.entries.firstOrNull { it.key == key }
+        fun builtIn(key: String): QuickTarget? =
+            BuiltIn.entries.firstOrNull { it.key == key } ?: Vpn.entries.firstOrNull { it.key == key }
     }
 }
 
@@ -32,6 +53,7 @@ internal data class QuickAction(
 ) {
     fun displayJson() = JSONObject().put("id", id).put("title", title).put("enabled", enabled)
         .put("key", target.key).put("icon", target.icon).put("manual", target is ManualQuickTarget)
+        .apply { if (target is QuickTarget.Vpn) put("vpnCommand", target.command.code) }
 
     fun json() = displayJson().apply { if (target is ManualQuickTarget) put("manual", target.json()) }
 

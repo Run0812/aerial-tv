@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import app.orchard.tv.R
 import app.orchard.tv.settings.QuickAction
 import app.orchard.tv.settings.QuickTarget
+import app.orchard.tv.settings.QuickTarget.Vpn
 import app.orchard.tv.ui.components.Pressable
 import app.orchard.tv.ui.components.smoothBackground
 import app.orchard.tv.ui.theme.Glyph
@@ -74,8 +75,14 @@ internal fun QuickTileRow(row: List<QuickTile>, muted: Boolean = false, onClick:
                         Spacer(Modifier.height(5.dp))
                         BasicText(tile.title, style = Type.Caption.copy(color = if (press.focused || active) Palette.OnFocus else Palette.Label,
                             fontSize = 10.sp, textAlign = TextAlign.Center), maxLines = 2, overflow = TextOverflow.Ellipsis)
-                        if (tile.target == QuickTarget.BuiltIn.Clash) {
-                            BasicText(stringResource(R.string.qc_clash_toggle), style = Type.Caption.copy(
+                        val vpn = tile.target as? Vpn
+                        if (vpn != null) {
+                            val label = when (vpn.command) {
+                                Vpn.Command.Toggle -> R.string.qc_vpn_toggle
+                                Vpn.Command.Connect -> R.string.qc_vpn_connect
+                                Vpn.Command.Disconnect -> R.string.qc_vpn_disconnect
+                            }
+                            BasicText(stringResource(label), style = Type.Caption.copy(
                                 color = if (press.focused) Palette.OnFocus.copy(alpha = 0.65f) else Palette.SecondaryLabel,
                                 fontSize = 9.sp, textAlign = TextAlign.Center), maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }

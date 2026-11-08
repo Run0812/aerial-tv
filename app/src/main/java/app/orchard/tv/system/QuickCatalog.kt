@@ -5,12 +5,14 @@ import android.content.Intent
 import android.provider.Settings
 import app.orchard.tv.R
 import app.orchard.tv.settings.QuickAction
+import app.orchard.tv.settings.QuickTarget
 import app.orchard.tv.settings.QuickTarget.BuiltIn
 
 /** Built-in controls offered to both editors, based on the device's available entry points. */
 internal object QuickCatalog {
     fun available(context: Context): List<QuickAction> = buildList {
-        if (ClashShortcut.available(context)) add(QuickAction("Clash Meta", BuiltIn.Clash))
+        QuickTarget.Vpn.entries.filter { VpnQuickControls.available(context, it) }
+            .forEach { add(QuickAction(it.client.title, it)) }
         fun system(target: BuiltIn, label: Int) {
             add(QuickAction(context.getString(label), target))
         }

@@ -345,7 +345,9 @@
     <string name="qc_manual_uri">Деректер URI (міндетті емес)</string>
     <string name="qc_manual_extras">Қосымша параметрлер (JSON, міндетті емес)</string>
     <string name="qc_manual_hint">Қолданба құжаттамасынан ашық компонентті көшіріңіз. Класс атауының басындағы нүкте қолданба пакетін білдіреді. Қосымша мәндер мәтін, сан немесе логикалық мән болуы мүмкін.</string>
-    <string name="qc_clash_toggle">Ауыстыру</string>
+    <string name="qc_vpn_toggle">Ауыстыру</string>
+    <string name="qc_vpn_connect">Қосу</string>
+    <string name="qc_vpn_disconnect">Ажырату</string>
     <string name="qc_arrange_hint">Атауын өзгерту, жылжыту, жасыру немесе алып тастау үшін түймені таңдаңыз.</string>
     <string name="qc_rename">Атауын өзгерту</string>
     <string name="qc_remove">Алып тастау</string>

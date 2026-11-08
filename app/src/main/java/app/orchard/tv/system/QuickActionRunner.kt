@@ -7,6 +7,7 @@ import app.orchard.tv.R
 import app.orchard.tv.settings.QuickControls
 import app.orchard.tv.settings.ManualQuickTarget
 import app.orchard.tv.settings.QuickTarget.BuiltIn
+import app.orchard.tv.settings.QuickTarget.Vpn
 import app.orchard.tv.settings.Restricted
 
 /** The TV and phone dispatch saved capabilities on the main thread under the same policy. */
@@ -38,11 +39,7 @@ internal object QuickActionRunner {
                 is ManualQuickTarget -> return ManualQuickDispatch.send(context, target).also {
                     if (it == Result.Sent && target.type == ManualQuickTarget.Type.Activity) home.closePanel()
                 }
-                BuiltIn.Clash -> return when (ClashShortcut.toggle(context)) {
-                    ClashShortcut.Result.Sent -> Result.Sent
-                    ClashShortcut.Result.Unavailable -> Result.Unavailable
-                    ClashShortcut.Result.Failed -> Result.Failed
-                }
+                is Vpn -> return VpnQuickControls.send(context, target)
                 BuiltIn.Network -> {
                     val pages = SystemProbe.networkSettingsIntents(context, SystemProbe.network(context).kind == NetKind.Ethernet)
                     val first = pages.firstOrNull() ?: return Result.Unavailable

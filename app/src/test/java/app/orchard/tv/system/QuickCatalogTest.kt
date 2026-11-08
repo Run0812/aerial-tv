@@ -26,7 +26,7 @@ class QuickCatalogTest {
             applicationInfo.enabled = true
         }
         val entry = QuickCatalog.available(context).single { it.target.key == "clash" }
-        assertEquals(QuickTarget.BuiltIn.Clash, entry.target)
+        assertEquals(QuickTarget.Vpn.Clash, entry.target)
         assertTrue(entry.valid())
         assertFalse(entry.displayJson().has("component"))
         assertFalse(entry.displayJson().has("extras"))

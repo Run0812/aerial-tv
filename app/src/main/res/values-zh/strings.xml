@@ -352,7 +352,9 @@
     <string name="qc_manual_uri">数据 URI（选填）</string>
     <string name="qc_manual_extras">附加参数（JSON，选填）</string>
     <string name="qc_manual_hint">从应用文档复制公开入口。类名以 . 开头时会自动补全包名。附加参数的值可以是字符串、数字或布尔值。</string>
-    <string name="qc_clash_toggle">切换</string>
+    <string name="qc_vpn_toggle">切换</string>
+    <string name="qc_vpn_connect">连接</string>
+    <string name="qc_vpn_disconnect">断开</string>
     <string name="qc_arrange_hint">选择图标可改名、移动、隐藏或移除。</string>
     <string name="qc_rename">改名</string>
     <string name="qc_remove">移除</string>

@@ -345,7 +345,9 @@
     <string name="qc_manual_uri">URI даних (необов’язково)</string>
     <string name="qc_manual_extras">Додаткові параметри (JSON, необов’язково)</string>
     <string name="qc_manual_hint">Скопіюйте відкритий компонент із документації застосунку. Крапка на початку назви класу позначає пакет застосунку. Додаткові значення можуть бути рядками, числами або логічними значеннями.</string>
-    <string name="qc_clash_toggle">Перемкнути</string>
+    <string name="qc_vpn_toggle">Перемкнути</string>
+    <string name="qc_vpn_connect">Підключити</string>
+    <string name="qc_vpn_disconnect">Відключити</string>
     <string name="qc_arrange_hint">Виберіть плитку, щоб перейменувати, перемістити, приховати чи прибрати.</string>
     <string name="qc_rename">Перейменувати</string>
     <string name="qc_remove">Прибрати</string>
