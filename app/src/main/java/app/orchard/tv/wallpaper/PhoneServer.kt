@@ -385,7 +385,7 @@ class PhoneServer private constructor(private val context: Context, private val 
         val pkg = session.parameters["app"]?.firstOrNull().orEmpty()
         val id = session.parameters["id"]?.firstOrNull().orEmpty()
         val target = QuickTarget.parse("shortcut:$pkg:$id") as? QuickTarget.Shortcut
-        if (target == null || target.pkg != pkg || QuickCatalog.app(pkg) == null) return text(Response.Status.NOT_FOUND, "")
+        if (target == null || target.pkg != pkg || !QuickCatalog.hasPublisher(pkg)) return text(Response.Status.NOT_FOUND, "")
         val bitmap = LauncherQuickShortcuts.icon(context, target) ?: return text(Response.Status.NOT_FOUND, "")
         // The drawable may return a bitmap shared with its resource cache.
         val bytes = ByteArrayOutputStream().apply { bitmap.compress(Bitmap.CompressFormat.PNG, 100, this) }.toByteArray()

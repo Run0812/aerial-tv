@@ -21,7 +21,7 @@ class QuickControlsTest {
     @Test fun persistsOrderVisibilityAndRenameAcrossRestart() {
         val store = QuickControlStore(context)
         val mute = QuickAction("Mute", BuiltIn.Mute)
-        val player = QuickAction("Player", QuickTarget.App("org.example.player"))
+        val player = QuickAction("Player", QuickTarget.Shortcut("org.example.player", "play"))
         assertNull(store.change(QuickEdit.Add(mute)))
         assertNull(store.change(QuickEdit.Add(player)))
         assertNull(store.change(QuickEdit.Move(player.id, 0)))
@@ -49,6 +49,7 @@ class QuickControlsTest {
         val shortcut = QuickAction("Connect", QuickTarget.Shortcut("org.example.remote", "host:1"))
         val stored = JSONArray().put(false)
             .put(JSONObject().put("key", "legacy:broadcast").put("title", "Retired prototype"))
+            .put(JSONObject().put("key", "app:org.example.player").put("id", "old-app").put("title", "Open player"))
             .put(shortcut.json())
         context.getSharedPreferences("quick_controls", Context.MODE_PRIVATE).edit()
             .putString("items", stored.toString()).apply()

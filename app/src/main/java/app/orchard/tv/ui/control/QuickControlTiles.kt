@@ -25,11 +25,13 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.orchard.tv.apps.AppCatalog
+import app.orchard.tv.R
 import app.orchard.tv.settings.QuickAction
 import app.orchard.tv.settings.QuickTarget
 import app.orchard.tv.system.LauncherQuickShortcuts
@@ -82,6 +84,11 @@ internal fun QuickTileRow(row: List<QuickTile>, muted: Boolean = false, onClick:
                         Spacer(Modifier.height(5.dp))
                         BasicText(tile.title, style = Type.Caption.copy(color = if (press.focused || active) Palette.OnFocus else Palette.Label,
                             fontSize = 10.sp, textAlign = TextAlign.Center), maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        if (tile.target == QuickTarget.BuiltIn.Clash) {
+                            BasicText(stringResource(R.string.qc_clash_toggle), style = Type.Caption.copy(
+                                color = if (press.focused) Palette.OnFocus.copy(alpha = 0.65f) else Palette.SecondaryLabel,
+                                fontSize = 9.sp, textAlign = TextAlign.Center), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
                     }
                 }
             }
@@ -100,7 +107,7 @@ private fun QuickSymbol(tile: QuickTile, color: Color) {
         }
         bitmap
     } else null
-    val pkg = when (target) { is QuickTarget.App -> target.pkg; is QuickTarget.Shortcut -> target.pkg; else -> null }
+    val pkg = (target as? QuickTarget.Shortcut)?.pkg
     val app = AppCatalog.loaded.firstOrNull { it.packageName == pkg }
     when {
         shortcutIcon != null -> Image(shortcutIcon, contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.size(27.dp))

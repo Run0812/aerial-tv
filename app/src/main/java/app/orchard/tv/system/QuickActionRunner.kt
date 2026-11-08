@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.provider.Settings
 import app.orchard.tv.R
-import app.orchard.tv.apps.AppEntry
 import app.orchard.tv.settings.QuickControls
 import app.orchard.tv.settings.QuickTarget
 import app.orchard.tv.settings.QuickTarget.BuiltIn
@@ -17,9 +16,8 @@ internal object QuickActionRunner {
         Background(R.string.qc_background), Restricted(R.string.qc_restricted),
     }
 
-    /** Installed by MainActivity only while resumed, so opening a tile uses its usual launch path. */
+    /** The resumed Control Center's existing settings and input navigation. */
     class Foreground(
-        val launch: (AppEntry) -> Unit,
         val open: (Intent) -> Unit,
         val showInputs: () -> Unit,
         val closePanel: () -> Unit,
@@ -37,7 +35,6 @@ internal object QuickActionRunner {
         val home = foreground ?: return Result.Background
         return runCatching {
             when (target) {
-                is QuickTarget.App -> home.launch(QuickCatalog.app(target.pkg) ?: return Result.Unavailable)
                 is QuickTarget.Shortcut -> return LauncherQuickShortcuts.start(context, target).also {
                     if (it == Result.Sent) home.closePanel()
                 }

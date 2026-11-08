@@ -1039,7 +1039,6 @@ class MainActivity : ComponentActivity() {
 
     /** Opens an app, growing it out of its tile. */
     private val quickControlHost = QuickActionRunner.Foreground(
-        launch = { app -> vm.overlay = Overlay.None; launch(app, null) },
         open = { intent -> vm.overlay = Overlay.None; open(intent) },
         showInputs = { vm.showInputs() },
         closePanel = { vm.overlay = Overlay.None },

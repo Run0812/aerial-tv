@@ -23,7 +23,7 @@ class QuickActionRunnerTest {
         assertNull(QuickControls.store.change(QuickEdit.Add(item)))
         assertEquals(QuickActionRunner.Result.Background, QuickActionRunner.run(context, item.id))
         val opened = mutableListOf<String>()
-        QuickActionRunner.foreground = QuickActionRunner.Foreground({}, { opened.add(it.action.orEmpty()) }, {}, {})
+        QuickActionRunner.foreground = QuickActionRunner.Foreground({ opened.add(it.action.orEmpty()) }, {}, {})
         try {
             assertEquals(QuickActionRunner.Result.Sent, QuickActionRunner.run(context, item.id))
             assertNull(QuickControls.store.change(QuickEdit.Show(item.id, false)))

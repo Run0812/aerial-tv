@@ -19,11 +19,6 @@ internal sealed interface QuickTarget {
         Mute("system:mute", "mute"), Inputs("system:inputs", "inputs"), Settings("system:settings", "settings"),
     }
 
-    data class App(val pkg: String) : QuickTarget {
-        override val key get() = "app:$pkg"
-        override val icon get() = "app"
-    }
-
     data class Shortcut(val pkg: String, val shortcutId: String) : QuickTarget {
         override val key get() = "shortcut:$pkg:$shortcutId"
         override val icon get() = "shortcut"
@@ -36,11 +31,9 @@ internal sealed interface QuickTarget {
             BuiltIn.entries.firstOrNull { it.key == key }?.let { return it }
             val parts = key.split(':', limit = 3)
             val pkg = parts.getOrNull(1)?.takeIf { it.length <= 200 && packagePattern.matches(it) } ?: return null
-            return when (parts[0]) {
-                "app" -> App(pkg).takeIf { parts.size == 2 }
-                "shortcut" -> parts.getOrNull(2)?.takeIf { it.isNotBlank() && it.length <= 1024 }?.let { Shortcut(pkg, it) }
-                else -> null
-            }
+            return if (parts[0] == "shortcut") {
+                parts.getOrNull(2)?.takeIf { it.isNotBlank() && it.length <= 1024 }?.let { Shortcut(pkg, it) }
+            } else null
         }
     }
 }

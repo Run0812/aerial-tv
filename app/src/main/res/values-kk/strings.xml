@@ -332,7 +332,7 @@
     <string name="qc_network_settings">Желі баптаулары</string>
     <string name="qc_bluetooth_settings">Bluetooth баптаулары</string>
     <string name="qc_group_system">Қолжетімді түймелер</string>
-    <string name="qc_group_apps">Қолданбаны ашу</string>
+    <string name="qc_clash_toggle">Ауыстыру</string>
     <string name="qc_arrange_hint">Атауын өзгерту, жылжыту, жасыру немесе алып тастау үшін түймені таңдаңыз.</string>
     <string name="qc_rename">Атауын өзгерту</string>
     <string name="qc_remove">Алып тастау</string>

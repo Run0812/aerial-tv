@@ -332,7 +332,7 @@
     <string name="qc_network_settings">Налаштування мережі</string>
     <string name="qc_bluetooth_settings">Налаштування Bluetooth</string>
     <string name="qc_group_system">Доступні кнопки</string>
-    <string name="qc_group_apps">Відкрити застосунок</string>
+    <string name="qc_clash_toggle">Перемкнути</string>
     <string name="qc_arrange_hint">Виберіть плитку, щоб перейменувати, перемістити, приховати чи прибрати.</string>
     <string name="qc_rename">Перейменувати</string>
     <string name="qc_remove">Прибрати</string>

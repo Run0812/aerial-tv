@@ -340,7 +340,7 @@
     <string name="qc_network_settings">Network settings</string>
     <string name="qc_bluetooth_settings">Bluetooth settings</string>
     <string name="qc_group_system">Available controls</string>
-    <string name="qc_group_apps">Open an app</string>
+    <string name="qc_clash_toggle">Toggle</string>
     <string name="qc_arrange_hint">Select a tile to rename, move, hide or remove it.</string>
     <string name="qc_rename">Rename</string>
     <string name="qc_remove">Remove</string>

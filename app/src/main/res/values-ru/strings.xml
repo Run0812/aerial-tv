@@ -332,7 +332,7 @@
     <string name="qc_network_settings">Настройки сети</string>
     <string name="qc_bluetooth_settings">Настройки Bluetooth</string>
     <string name="qc_group_system">Доступные кнопки</string>
-    <string name="qc_group_apps">Открыть приложение</string>
+    <string name="qc_clash_toggle">Переключить</string>
     <string name="qc_arrange_hint">Выберите плитку, чтобы переименовать, переместить, скрыть или убрать.</string>
     <string name="qc_rename">Переименовать</string>
     <string name="qc_remove">Убрать</string>

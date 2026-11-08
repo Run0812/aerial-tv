@@ -309,9 +309,7 @@
   .qc-catalog .qc-control { position:relative; }
   .qc-chosen { opacity:.7 !important; }
   .qc-check { position:absolute; right:10px; top:6px; color:var(--tint); font-weight:700; }
-  .qc-name-form { margin:16px 0; display:grid; gap:12px; }
-  .qc-name-form label { display:grid; gap:8px; }
-  .qc-name-form input { width:100%; padding:12px; border:1px solid var(--tertiary); border-radius:12px; background:var(--card); color:var(--label); font:inherit; }
+  .qc-action-label { color:var(--secondary); font-size:12px; }
 
 </style>
 </head>
@@ -1457,7 +1455,7 @@ for (const [key, en, zh, ru, uk, kk] of [
   ["qc_phone_hint","Tap a tile to control the TV. Tap Edit to drag and arrange. Changes sync to the TV.","点图标控制电视；点“编辑”可拖动排序。改动同步到电视。","Нажмите плитку для управления. В режиме правки перетаскивайте плитки. Изменения синхронизируются с ТВ.","Натисніть плитку для керування. У режимі редагування перетягуйте плитки. Зміни синхронізуються з ТВ.","Теледидарды басқару үшін түймені басыңыз. Өңдеу режимінде сүйреп реттеңіз. Өзгерістер ТВ-мен синхрондалады."],
   ["qc_pin","Parental PIN","家长密码","Родительский PIN","Батьківський PIN","Ата-ана PIN коды"],
   ["qc_group_system","Available controls","可用控制","Доступные кнопки","Доступні кнопки","Қолжетімді түймелер"],
-  ["qc_group_apps","Open an app","打开应用","Открыть приложение","Відкрити застосунок","Қолданбаны ашу"],
+  ["qc_clash_toggle","Toggle","切换","Переключить","Перемкнути","Ауыстыру"],
   ["qc_rename","Rename","改名","Переименовать","Перейменувати","Атауын өзгерту"],
   ["qc_remove","Remove","移除","Убрать","Прибрати","Алып тастау"],
   ["qc_done","Done","完成","Готово","Готово","Дайын"],
@@ -2543,7 +2541,9 @@ function quickSymbol(entry) {
 function quickButton(title, entry, click) {
   const button = el('button','qc-control'); button.type = 'button';
   const icon = el('span','qc-icon'); icon.append(quickSymbol(entry));
-  button.append(icon, el('span','qc-label',title)); button.onclick = click;
+  button.append(icon, el('span','qc-label',title));
+  if (entry.key === 'clash') button.append(el('span','qc-action-label',t('qc_clash_toggle')));
+  button.onclick = click;
   return button;
 }
 
@@ -2616,7 +2616,7 @@ async function quickCatalog() {
   const q = state.quickControls, chosen = new Set(q.items.map(c => c.key));
   openSheet(body => {
     body.append(el('h2','big',t('qc_add')));
-    for (const group of ['system','shortcuts','apps']) {
+    for (const group of ['system','shortcuts']) {
       const entries = catalog.entries.filter(e => e.group === group);
       if (!entries.length) continue;
       body.append(el('h4','',t('qc_group_' + group)));
@@ -2641,10 +2641,13 @@ function quickEditor(control,index) {
   const q = state.quickControls;
   openSheet(body => {
     body.append(el('h2','big',control.title));
-    const form = el('form','qc-name-form'), label = el('label','',t('qc_name'));
-    const input = el('input'); input.value = control.title; input.required = true; input.maxLength = 64; input.autocomplete = 'off';
-    label.append(input); form.append(label);
-    const save = el('button','btn',t('qc_rename')); save.type = 'submit'; form.append(save); body.append(form);
+    const nameList = el('div','list');
+    const form = el('form','item field');
+    const input = el('input'); input.type = 'text'; input.value = control.title;
+    input.required = true; input.maxLength = 64; input.autocomplete = 'off';
+    input.setAttribute('enterkeyhint','done'); input.setAttribute('aria-label',t('qc_name'));
+    const save = el('button','link',t('save')); save.type = 'submit';
+    form.append(input,save); nameList.append(form); body.append(nameList);
     form.onsubmit = async e => {
       e.preventDefault();
       if (await quickRequest('update',{id:control.id,title:input.value.trim()},q.revision)) closeSheet();
