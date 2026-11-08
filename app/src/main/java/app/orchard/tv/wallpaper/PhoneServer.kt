@@ -463,10 +463,13 @@ class PhoneServer private constructor(private val context: Context, private val 
 
     private fun quickControls(session: IHTTPSession): Response {
         // A plain cross-origin form cannot send this header. The phone page is served on this origin.
-        if (session.headers["x-aerial-quick-controls"] != "1") return text(Response.Status.FORBIDDEN, "")
-        if (!quickAuthorized(session)) return quickResponse("locked")
+        // Rejected requests still have an unread body. Do not reuse their connection.
+        if (session.headers["x-aerial-quick-controls"] != "1") {
+            return text(Response.Status.FORBIDDEN, "").apply { closeConnection(true) }
+        }
+        if (!quickAuthorized(session)) return quickResponse("locked").apply { closeConnection(true) }
         if ((session.headers["content-length"]?.toLongOrNull() ?: 0L) > 16 * 1024) {
-            return quickResponse("invalid")
+            return quickResponse("invalid").apply { closeConnection(true) }
         }
         val fields = form(session)
         val op = fields["op"].orEmpty()
