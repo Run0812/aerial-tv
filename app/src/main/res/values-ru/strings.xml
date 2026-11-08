@@ -332,12 +332,23 @@
     <string name="qc_network_settings">Настройки сети</string>
     <string name="qc_bluetooth_settings">Настройки Bluetooth</string>
     <string name="qc_group_system">Доступные кнопки</string>
+    <string name="qc_manual_add">Добавить вручную</string>
+    <string name="qc_manual_edit">Изменить действие</string>
+    <string name="qc_manual_type">Тип действия</string>
+    <string name="qc_manual_activity">Открыть экран (Activity)</string>
+    <string name="qc_manual_broadcast">Отправить широковещательное сообщение</string>
+    <string name="qc_manual_name">Название кнопки</string>
+    <string name="qc_manual_package">Имя пакета приложения</string>
+    <string name="qc_manual_component">Имя класса компонента</string>
+    <string name="qc_manual_action">Действие Intent</string>
+    <string name="qc_manual_optional_action">Действие Intent (необязательно)</string>
+    <string name="qc_manual_uri">URI данных (необязательно)</string>
+    <string name="qc_manual_extras">Дополнительные параметры (JSON, необязательно)</string>
+    <string name="qc_manual_hint">Скопируйте открытый компонент из документации приложения. Точка в начале имени класса обозначает пакет приложения. Дополнительные значения могут быть строками, числами или логическими значениями.</string>
     <string name="qc_clash_toggle">Переключить</string>
     <string name="qc_arrange_hint">Выберите плитку, чтобы переименовать, переместить, скрыть или убрать.</string>
     <string name="qc_rename">Переименовать</string>
     <string name="qc_remove">Убрать</string>
     <string name="qc_exists">Эта кнопка уже добавлена.</string>
     <string name="qc_mute">Без звука</string>
-    <string name="qc_group_shortcuts">Ярлыки приложений</string>
-    <string name="qc_shortcuts_host">Ярлыки доступны, когда Aerial выбран системным лаунчером.</string>
 </resources>

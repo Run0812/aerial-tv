@@ -5,7 +5,7 @@ import android.content.Intent
 import android.provider.Settings
 import app.orchard.tv.R
 import app.orchard.tv.settings.QuickControls
-import app.orchard.tv.settings.QuickTarget
+import app.orchard.tv.settings.ManualQuickTarget
 import app.orchard.tv.settings.QuickTarget.BuiltIn
 import app.orchard.tv.settings.Restricted
 
@@ -35,8 +35,8 @@ internal object QuickActionRunner {
         val home = foreground ?: return Result.Background
         return runCatching {
             when (target) {
-                is QuickTarget.Shortcut -> return LauncherQuickShortcuts.start(context, target).also {
-                    if (it == Result.Sent) home.closePanel()
+                is ManualQuickTarget -> return ManualQuickDispatch.send(context, target).also {
+                    if (it == Result.Sent && target.type == ManualQuickTarget.Type.Activity) home.closePanel()
                 }
                 BuiltIn.Clash -> return when (ClashShortcut.toggle(context)) {
                     ClashShortcut.Result.Sent -> Result.Sent

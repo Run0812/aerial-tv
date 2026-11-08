@@ -22,10 +22,10 @@ import app.orchard.tv.settings.AerialSettings
 import app.orchard.tv.settings.QuickControlStore
 import app.orchard.tv.settings.QuickControls
 import app.orchard.tv.settings.QuickEdit
-import app.orchard.tv.settings.QuickTarget
+import app.orchard.tv.settings.ManualQuickTarget
+import app.orchard.tv.settings.QuickAction
 import app.orchard.tv.system.QuickActionRunner
 import app.orchard.tv.system.QuickCatalog
-import app.orchard.tv.system.LauncherQuickShortcuts
 import app.orchard.tv.settings.KidsLock
 import app.orchard.tv.settings.Restricted
 import app.orchard.tv.settings.RestrictedKind
@@ -141,7 +141,6 @@ class PhoneServer private constructor(private val context: Context, private val 
                     json(state().put("removed", removed))
                 }
                 path.startsWith("/tile/") -> tile(java.net.URLDecoder.decode(path.removePrefix("/tile/"), "UTF-8"), own = session.parameters["art"]?.firstOrNull() == "own")
-                session.method == Method.GET && path == "/shortcut-icon" -> shortcutIcon(session)
                 path.startsWith("/library/") -> libraryPicture(java.net.URLDecoder.decode(path.removePrefix("/library/"), "UTF-8"))
                 session.method == Method.POST && path == "/api/icon" -> icon(session)
                 session.method == Method.POST && path == "/api/source/name" -> {
@@ -251,7 +250,7 @@ class PhoneServer private constructor(private val context: Context, private val 
             .put("videoRoom", ScreensaverVideos.room(context))
             .put("focusStyle", AerialSettings.focusStyle.key)
             .put("kids", kidsState())
-            .put("quickControls", QuickControls.store.json(QuickCatalog::displayJson).apply {
+            .put("quickControls", QuickControls.store.json(QuickAction::displayJson).apply {
                 put("limit", QuickControlStore.MAX_ITEMS)
                 put("muted", app.orchard.tv.system.SystemProbe.volume(context).muted)
             })
@@ -380,20 +379,6 @@ class PhoneServer private constructor(private val context: Context, private val 
         }
     }
 
-    private fun shortcutIcon(session: IHTTPSession): Response {
-        if (!quickAuthorized(session)) return text(Response.Status.FORBIDDEN, "")
-        val pkg = session.parameters["app"]?.firstOrNull().orEmpty()
-        val id = session.parameters["id"]?.firstOrNull().orEmpty()
-        val target = QuickTarget.parse("shortcut:$pkg:$id") as? QuickTarget.Shortcut
-        if (target == null || target.pkg != pkg || !QuickCatalog.hasPublisher(pkg)) return text(Response.Status.NOT_FOUND, "")
-        val bitmap = LauncherQuickShortcuts.icon(context, target) ?: return text(Response.Status.NOT_FOUND, "")
-        // The drawable may return a bitmap shared with its resource cache.
-        val bytes = ByteArrayOutputStream().apply { bitmap.compress(Bitmap.CompressFormat.PNG, 100, this) }.toByteArray()
-        return newFixedLengthResponse(Response.Status.OK, "image/png", ByteArrayInputStream(bytes), bytes.size.toLong()).apply {
-            addHeader("Cache-Control", "no-store")
-        }
-    }
-
     /** The icon library's picture of an app, as downloaded. */
     private fun libraryPicture(pkg: String): Response {
         val f = IconLibrary.file(pkg) ?: return text(Response.Status.NOT_FOUND, "")
@@ -468,23 +453,47 @@ class PhoneServer private constructor(private val context: Context, private val 
             return text(Response.Status.FORBIDDEN, "").apply { closeConnection(true) }
         }
         if (!quickAuthorized(session)) return quickResponse("locked").apply { closeConnection(true) }
-        if ((session.headers["content-length"]?.toLongOrNull() ?: 0L) > 16 * 1024) {
+        if ((session.headers["content-length"]?.toLongOrNull() ?: 0L) > 64 * 1024) {
             return quickResponse("invalid").apply { closeConnection(true) }
         }
         val fields = form(session)
         val op = fields["op"].orEmpty()
         if (op == "catalog") {
             return json(JSONObject().put("saved", true)
-                .put("shortcutsNeedHost", Build.VERSION.SDK_INT >= 25 && !LauncherQuickShortcuts.hasAccess(context))
-                .put("entries", JSONArray().apply { QuickCatalog.available(context).forEach { put(it.json()) } }))
+                .put("entries", JSONArray().apply { QuickCatalog.available(context).forEach { put(it.displayJson()) } }))
         }
         if (op == "unlock") return quickResponse(null)
         val id = fields["id"].orEmpty()
+        if (op == "details") {
+            val revision = fields["revision"]?.toLongOrNull()
+            val (target, error) = runBlocking(Dispatchers.Main) {
+                val store = QuickControls.store
+                val manual = store.items.firstOrNull { it.id == id }?.target as? ManualQuickTarget
+                when {
+                    revision != store.revision -> null to "conflict"
+                    manual == null -> null to "missing"
+                    else -> manual to null
+                }
+            }
+            if (target == null) return quickResponse(error)
+            return json(JSONObject().put("saved", true).put("manual", target.json())).apply {
+                addHeader("Cache-Control", "no-store")
+            }
+        }
         val revision = fields["revision"]?.toLongOrNull() ?: return quickResponse("conflict")
-        // Resolve catalog keys on the HTTP worker. Neither UI provides executable parameters.
         val edit = when (op) {
             "enabled" -> QuickEdit.EnableArea(fields["on"] == "1")
-            "add" -> QuickCatalog.available(context).firstOrNull { it.key == fields["key"] }?.let { QuickEdit.Add(it.control) }
+            "add" -> QuickCatalog.available(context).firstOrNull { it.target.key == fields["key"] }?.let { QuickEdit.Add(it) }
+            "manual-add", "manual-update" -> {
+                val target = ManualQuickTarget.create(fields["type"].orEmpty(), fields["pkg"].orEmpty(),
+                    fields["component"].orEmpty(), fields["action"].orEmpty(), fields["uri"].orEmpty(),
+                    fields["extras"].orEmpty())
+                val title = fields["title"].orEmpty().trim()
+                target?.let {
+                    if (op == "manual-add") QuickEdit.Add(QuickAction(title, it))
+                    else QuickEdit.Configure(id, title, it)
+                }
+            }
             "update" -> QuickEdit.Rename(id, fields["title"].orEmpty().trim())
             "toggle" -> QuickEdit.Show(id, fields["on"] == "1")
             "delete" -> QuickEdit.Remove(id)

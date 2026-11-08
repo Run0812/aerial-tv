@@ -2,7 +2,6 @@ package app.orchard.tv.ui.control
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,33 +15,24 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import app.orchard.tv.apps.AppCatalog
 import app.orchard.tv.R
 import app.orchard.tv.settings.QuickAction
 import app.orchard.tv.settings.QuickTarget
-import app.orchard.tv.system.LauncherQuickShortcuts
 import app.orchard.tv.ui.components.Pressable
 import app.orchard.tv.ui.components.smoothBackground
 import app.orchard.tv.ui.theme.Glyph
 import app.orchard.tv.ui.theme.GlyphIcon
 import app.orchard.tv.ui.theme.Palette
 import app.orchard.tv.ui.theme.Type
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 internal data class QuickTile(
     val id: String,
@@ -99,19 +89,7 @@ internal fun QuickTileRow(row: List<QuickTile>, muted: Boolean = false, onClick:
 
 @Composable
 private fun QuickSymbol(tile: QuickTile, color: Color) {
-    val context = LocalContext.current
-    val target = tile.target
-    val shortcutIcon = if (target is QuickTarget.Shortcut) {
-        val bitmap by produceState<ImageBitmap?>(null, target) {
-            value = withContext(Dispatchers.IO) { LauncherQuickShortcuts.icon(context, target)?.asImageBitmap() }
-        }
-        bitmap
-    } else null
-    val pkg = (target as? QuickTarget.Shortcut)?.pkg
-    val app = AppCatalog.loaded.firstOrNull { it.packageName == pkg }
     when {
-        shortcutIcon != null -> Image(shortcutIcon, contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.size(27.dp))
-        app != null -> Image(app.art.fore ?: app.art.back, contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.size(27.dp))
         tile.icon == "add" -> BasicText("+", style = Type.LargeTitle.copy(color = color, fontSize = 29.sp))
         tile.icon == "bluetooth" -> Canvas(Modifier.size(25.dp)) {
             val points = listOf(Offset(.5f,.05f), Offset(.5f,.95f), Offset(.85f,.7f), Offset(.15f,.25f), Offset(.85f,.3f), Offset(.5f,.05f))
@@ -123,7 +101,6 @@ private fun QuickSymbol(tile: QuickTile, color: Color) {
             "mute" -> Glyph.SpeakerMuted
             "inputs" -> Glyph.Input
             "settings" -> Glyph.Gear
-            "app" -> Glyph.Bag
             else -> Glyph.Switches
         }, color, 25.dp)
     }

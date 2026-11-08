@@ -9,7 +9,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.util.UUID
 
-/** A catalog capability. Saved controls keep its identity, never an executable Intent. */
+/** Built-in controls and validated manual entry points. */
 internal sealed interface QuickTarget {
     val key: String
     val icon: String
@@ -19,22 +19,8 @@ internal sealed interface QuickTarget {
         Mute("system:mute", "mute"), Inputs("system:inputs", "inputs"), Settings("system:settings", "settings"),
     }
 
-    data class Shortcut(val pkg: String, val shortcutId: String) : QuickTarget {
-        override val key get() = "shortcut:$pkg:$shortcutId"
-        override val icon get() = "shortcut"
-    }
-
     companion object {
-        private val packagePattern = Regex("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+")
-
-        fun parse(key: String): QuickTarget? {
-            BuiltIn.entries.firstOrNull { it.key == key }?.let { return it }
-            val parts = key.split(':', limit = 3)
-            val pkg = parts.getOrNull(1)?.takeIf { it.length <= 200 && packagePattern.matches(it) } ?: return null
-            return if (parts[0] == "shortcut") {
-                parts.getOrNull(2)?.takeIf { it.isNotBlank() && it.length <= 1024 }?.let { Shortcut(pkg, it) }
-            } else null
-        }
+        fun builtIn(key: String): BuiltIn? = BuiltIn.entries.firstOrNull { it.key == key }
     }
 }
 
@@ -44,16 +30,20 @@ internal data class QuickAction(
     val id: String = UUID.randomUUID().toString(),
     val enabled: Boolean = true,
 ) {
-    fun json() = JSONObject().put("id", id).put("title", title).put("enabled", enabled).put("key", target.key)
+    fun displayJson() = JSONObject().put("id", id).put("title", title).put("enabled", enabled)
+        .put("key", target.key).put("icon", target.icon).put("manual", target is ManualQuickTarget)
 
-    fun valid(): Boolean = validTitle(title) && id.length in 1..80 && idPattern.matches(id) && QuickTarget.parse(target.key) == target
+    fun json() = displayJson().apply { if (target is ManualQuickTarget) put("manual", target.json()) }
+
+    fun valid(): Boolean = validTitle(title) && id.length in 1..80 && idPattern.matches(id)
 
     companion object {
         private val idPattern = Regex("[A-Za-z0-9_-]+")
         fun validTitle(title: String) = title.isNotBlank() && title.length <= 64
 
         fun from(json: JSONObject): QuickAction? {
-            val target = QuickTarget.parse(json.optString("key")) ?: return null
+            val target = json.optJSONObject("manual")?.let(ManualQuickTarget::from)
+                ?: QuickTarget.builtIn(json.optString("key")) ?: return null
             return QuickAction(json.optString("title").trim(), target, json.optString("id"), json.optBoolean("enabled", true))
                 .takeIf { it.valid() }
         }
@@ -64,6 +54,7 @@ internal sealed interface QuickEdit {
     data class EnableArea(val enabled: Boolean) : QuickEdit
     data class Add(val item: QuickAction) : QuickEdit
     data class Rename(val id: String, val title: String) : QuickEdit
+    data class Configure(val id: String, val title: String, val target: ManualQuickTarget) : QuickEdit
     data class Show(val id: String, val visible: Boolean) : QuickEdit
     data class Remove(val id: String) : QuickEdit
     data class Move(val id: String, val position: Int) : QuickEdit
@@ -110,6 +101,12 @@ internal class QuickControlStore(context: Context) {
                 if (items.none { it.id == edit.id }) return "missing"
                 if (!QuickAction.validTitle(edit.title)) return "invalid"
                 current.copy(items = items.map { if (it.id == edit.id) it.copy(title = edit.title) else it })
+            }
+            is QuickEdit.Configure -> {
+                val item = items.firstOrNull { it.id == edit.id } ?: return "missing"
+                if (item.target !is ManualQuickTarget || !QuickAction.validTitle(edit.title)) return "invalid"
+                if (items.any { it.id != edit.id && it.target.key == edit.target.key }) return "exists"
+                current.copy(items = items.map { if (it.id == edit.id) it.copy(title = edit.title, target = edit.target) else it })
             }
             is QuickEdit.Show -> {
                 if (items.none { it.id == edit.id }) return "missing"

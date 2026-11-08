@@ -18,24 +18,24 @@ class QuickCatalogTest {
     private val context = RuntimeEnvironment.getApplication()
 
     @Test fun exposesClashOnlyWhenAnEnabledSupportedAppIsInstalled() {
-        assertFalse(QuickCatalog.available(context).any { it.key == "clash" })
+        assertFalse(QuickCatalog.available(context).any { it.target.key == "clash" })
         val target = ComponentName("com.github.metacubex.clash.alpha", "com.github.kr328.clash.ExternalControlActivity")
         shadowOf(context.packageManager).addActivityIfNotPresent(target).apply {
             exported = true
             enabled = true
             applicationInfo.enabled = true
         }
-        val entry = QuickCatalog.available(context).single { it.key == "clash" }
-        assertEquals(QuickTarget.BuiltIn.Clash, entry.control.target)
-        assertTrue(entry.control.valid())
-        assertFalse(entry.json().has("component"))
-        assertFalse(entry.json().has("extras"))
+        val entry = QuickCatalog.available(context).single { it.target.key == "clash" }
+        assertEquals(QuickTarget.BuiltIn.Clash, entry.target)
+        assertTrue(entry.valid())
+        assertFalse(entry.displayJson().has("component"))
+        assertFalse(entry.displayJson().has("extras"))
     }
 
     @Test fun availableControlsHaveUniqueValidKeys() {
         val entries = QuickCatalog.available(context)
-        assertEquals(entries.size, entries.map { it.key }.distinct().size)
-        assertTrue(entries.all { it.control.valid() })
-        assertTrue(entries.any { it.key == "system:mute" })
+        assertEquals(entries.size, entries.map { it.target.key }.distinct().size)
+        assertTrue(entries.all { it.valid() })
+        assertTrue(entries.any { it.target.key == "system:mute" })
     }
 }

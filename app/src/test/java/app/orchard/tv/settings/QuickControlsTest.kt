@@ -7,6 +7,7 @@ import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -21,7 +22,7 @@ class QuickControlsTest {
     @Test fun persistsOrderVisibilityAndRenameAcrossRestart() {
         val store = QuickControlStore(context)
         val mute = QuickAction("Mute", BuiltIn.Mute)
-        val player = QuickAction("Player", QuickTarget.Shortcut("org.example.player", "play"))
+        val player = QuickAction("Player", manual(".Play"))
         assertNull(store.change(QuickEdit.Add(mute)))
         assertNull(store.change(QuickEdit.Add(player)))
         assertNull(store.change(QuickEdit.Move(player.id, 0)))
@@ -46,14 +47,15 @@ class QuickControlsTest {
     }
 
     @Test fun invalidOrRetiredRecordsDoNotEraseValidNeighbors() {
-        val shortcut = QuickAction("Connect", QuickTarget.Shortcut("org.example.remote", "host:1"))
+        val control = QuickAction("Connect", manual(".Connect"))
         val stored = JSONArray().put(false)
             .put(JSONObject().put("key", "legacy:broadcast").put("title", "Retired prototype"))
             .put(JSONObject().put("key", "app:org.example.player").put("id", "old-app").put("title", "Open player"))
-            .put(shortcut.json())
+            .put(JSONObject().put("key", "shortcut:org.example.remote:host").put("id", "old-shortcut").put("title", "Old shortcut"))
+            .put(control.json())
         context.getSharedPreferences("quick_controls", Context.MODE_PRIVATE).edit()
             .putString("items", stored.toString()).apply()
-        assertEquals(listOf(shortcut), QuickControlStore(context).items)
+        assertEquals(listOf(control), QuickControlStore(context).items)
     }
 
     @Test fun rejectsDuplicateCapabilitiesAndOutOfRangeMoves() {
@@ -66,4 +68,33 @@ class QuickControlsTest {
         assertEquals(revision, store.revision)
         assertEquals(listOf(item), store.items)
     }
+
+    @Test fun manualEditPreservesIdentityVisibilityAndTypes() {
+        val store = QuickControlStore(context)
+        val control = QuickAction("Play", manual(".Play"), enabled = false)
+        val next = manual(".Pause", """{"volume":1.0,"enabled":true,"label":"room","timestamp":2147483648}""")
+        assertNull(store.change(QuickEdit.Add(control)))
+        assertNull(store.change(QuickEdit.Configure(control.id, "Pause", next)))
+        val saved = QuickControlStore(context).items.single()
+        assertEquals(control.copy(title = "Pause", target = next), saved)
+        assertEquals(1.0, (saved.target as ManualQuickTarget).extras["volume"])
+        assertEquals(2147483648L, saved.target.extras["timestamp"])
+        assertTrue(saved.displayJson().getBoolean("manual"))
+        assertFalse(saved.displayJson().toString().contains("org.example.player"))
+        assertEquals(next.key, manual("org.example.player.Pause",
+            """{"label":"room","timestamp":2147483648,"enabled":true,"volume":1.0}""").key)
+    }
+
+    @Test fun rejectsInvalidManualFields() {
+        val invalidExtras = listOf("[]", "{unquoted:true}", """{"nested":{}}""", """{"empty":null}""", """{"x":1} true""")
+        for (extras in invalidExtras) {
+            assertNull(ManualQuickTarget.create("activity", "org.example.player", ".Play", "", "", extras))
+        }
+        assertNull(ManualQuickTarget.create("broadcast", "org.example.player", ".Play", "", "", ""))
+        assertNull(ManualQuickTarget.create("activity", "org.example.player", ".Play", "", "file:///tmp/data", ""))
+        assertNull(ManualQuickTarget.create("activity", "app.orchard.tv.shortcuts", ".Main", "", "", ""))
+    }
+
+    private fun manual(component: String, extras: String = "") =
+        requireNotNull(ManualQuickTarget.create("activity", "org.example.player", component, "", "", extras))
 }

@@ -332,12 +332,23 @@
     <string name="qc_network_settings">Желі баптаулары</string>
     <string name="qc_bluetooth_settings">Bluetooth баптаулары</string>
     <string name="qc_group_system">Қолжетімді түймелер</string>
+    <string name="qc_manual_add">Қолмен қосу</string>
+    <string name="qc_manual_edit">Әрекетті өңдеу</string>
+    <string name="qc_manual_type">Әрекет түрі</string>
+    <string name="qc_manual_activity">Экранды ашу (Activity)</string>
+    <string name="qc_manual_broadcast">Таратылым жіберу</string>
+    <string name="qc_manual_name">Түйме атауы</string>
+    <string name="qc_manual_package">Қолданба пакетінің атауы</string>
+    <string name="qc_manual_component">Компонент класының атауы</string>
+    <string name="qc_manual_action">Intent әрекеті</string>
+    <string name="qc_manual_optional_action">Intent әрекеті (міндетті емес)</string>
+    <string name="qc_manual_uri">Деректер URI (міндетті емес)</string>
+    <string name="qc_manual_extras">Қосымша параметрлер (JSON, міндетті емес)</string>
+    <string name="qc_manual_hint">Қолданба құжаттамасынан ашық компонентті көшіріңіз. Класс атауының басындағы нүкте қолданба пакетін білдіреді. Қосымша мәндер мәтін, сан немесе логикалық мән болуы мүмкін.</string>
     <string name="qc_clash_toggle">Ауыстыру</string>
     <string name="qc_arrange_hint">Атауын өзгерту, жылжыту, жасыру немесе алып тастау үшін түймені таңдаңыз.</string>
     <string name="qc_rename">Атауын өзгерту</string>
     <string name="qc_remove">Алып тастау</string>
     <string name="qc_exists">Бұл түйме бұрын қосылған.</string>
     <string name="qc_mute">Дыбыссыз</string>
-    <string name="qc_group_shortcuts">Қолданба таңбашалары</string>
-    <string name="qc_shortcuts_host">Aerial жүйелік іске қосқыш болғанда қолданба таңбашалары қолжетімді.</string>
 </resources>

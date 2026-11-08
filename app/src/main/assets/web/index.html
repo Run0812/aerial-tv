@@ -295,7 +295,11 @@
   .qc-control:disabled { opacity:.45; cursor:default; }
   .qc-icon { display:flex; align-items:center; justify-content:center; width:48px; height:48px; border-radius:50%; background:var(--bg); }
   .qc-icon svg { width:29px; height:29px; }
-  .qc-app-icon { width:46px; height:40px; object-fit:contain; border-radius:8px; }
+  .qc-manual-form .field { align-items: stretch; flex-direction: column; }
+  .qc-manual-form .field :is(select,textarea) {
+    min-width: 0; font: inherit; color: var(--label); background: var(--fill); border: 0; border-radius: 6px;
+  }
+  .qc-manual-form .field textarea { resize: vertical; }
   .qc-label { font-size:13px; font-weight:550; line-height:1.3; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow-wrap:anywhere; }
   .qc-active .qc-control { background:#e8f4ff; color:#086cbe; }
   .qc-active .qc-icon { background:#fff; }
@@ -1455,6 +1459,19 @@ for (const [key, en, zh, ru, uk, kk] of [
   ["qc_phone_hint","Tap a tile to control the TV. Tap Edit to drag and arrange. Changes sync to the TV.","点图标控制电视；点“编辑”可拖动排序。改动同步到电视。","Нажмите плитку для управления. В режиме правки перетаскивайте плитки. Изменения синхронизируются с ТВ.","Натисніть плитку для керування. У режимі редагування перетягуйте плитки. Зміни синхронізуються з ТВ.","Теледидарды басқару үшін түймені басыңыз. Өңдеу режимінде сүйреп реттеңіз. Өзгерістер ТВ-мен синхрондалады."],
   ["qc_pin","Parental PIN","家长密码","Родительский PIN","Батьківський PIN","Ата-ана PIN коды"],
   ["qc_group_system","Available controls","可用控制","Доступные кнопки","Доступні кнопки","Қолжетімді түймелер"],
+  ["qc_manual_add","Add manually","手动添加操作","Добавить вручную","Додати вручну","Қолмен қосу"],
+  ["qc_manual_edit","Edit action","编辑操作","Изменить действие","Змінити дію","Әрекетті өңдеу"],
+  ["qc_manual_type","Action type","操作类型","Тип действия","Тип дії","Әрекет түрі"],
+  ["qc_manual_activity","Open screen (Activity)","打开界面（Activity）","Открыть экран (Activity)","Відкрити екран (Activity)","Экранды ашу (Activity)"],
+  ["qc_manual_broadcast","Send broadcast","发送广播","Отправить широковещательное сообщение","Надіслати широкомовне повідомлення","Таратылым жіберу"],
+  ["qc_manual_name","Control name","按钮名称","Название кнопки","Назва кнопки","Түйме атауы"],
+  ["qc_manual_package","App package name","应用包名","Имя пакета приложения","Назва пакета застосунку","Қолданба пакетінің атауы"],
+  ["qc_manual_component","Component class name","组件类名","Имя класса компонента","Назва класу компонента","Компонент класының атауы"],
+  ["qc_manual_action","Intent action","Intent 动作","Действие Intent","Дія Intent","Intent әрекеті"],
+  ["qc_manual_optional_action","Intent action (optional)","Intent 动作（选填）","Действие Intent (необязательно)","Дія Intent (необов’язково)","Intent әрекеті (міндетті емес)"],
+  ["qc_manual_uri","Data URI (optional)","数据 URI（选填）","URI данных (необязательно)","URI даних (необов’язково)","Деректер URI (міндетті емес)"],
+  ["qc_manual_extras","Extra parameters (JSON, optional)","附加参数（JSON，选填）","Дополнительные параметры (JSON, необязательно)","Додаткові параметри (JSON, необов’язково)","Қосымша параметрлер (JSON, міндетті емес)"],
+  ["qc_manual_hint","Copy a public entry point from the app documentation. A leading dot in the class name means the app package. Extra values may be strings, numbers, or booleans.","从应用文档复制公开入口。类名以 . 开头时会自动补全包名。附加参数的值可以是字符串、数字或布尔值。","Скопируйте открытый компонент из документации приложения. Точка в начале имени класса обозначает пакет приложения. Дополнительные значения могут быть строками, числами или логическими значениями.","Скопіюйте відкритий компонент із документації застосунку. Крапка на початку назви класу позначає пакет застосунку. Додаткові значення можуть бути рядками, числами або логічними значеннями.","Қолданба құжаттамасынан ашық компонентті көшіріңіз. Класс атауының басындағы нүкте қолданба пакетін білдіреді. Қосымша мәндер мәтін, сан немесе логикалық мән болуы мүмкін."],
   ["qc_clash_toggle","Toggle","切换","Переключить","Перемкнути","Ауыстыру"],
   ["qc_rename","Rename","改名","Переименовать","Перейменувати","Атауын өзгерту"],
   ["qc_remove","Remove","移除","Убрать","Прибрати","Алып тастау"],
@@ -1462,8 +1479,6 @@ for (const [key, en, zh, ru, uk, kk] of [
   ["qc_reorder","Drag to reorder","拖动排序","Перетащить","Перетягнути","Ретін өзгерту үшін сүйреңіз"],
   ["qc_added","Added","已添加","Добавлено","Додано","Қосылды"],
   ["qc_exists","This control is already added.","已添加此控制。","Эта кнопка уже добавлена.","Цю кнопку вже додано.","Бұл түйме бұрын қосылған."],
-  ["qc_group_shortcuts","App shortcuts","应用快捷操作","Ярлыки приложений","Ярлики застосунків","Қолданба таңбашалары"],
-  ["qc_shortcuts_host","App shortcuts are available when Aerial is the system's launcher.","Aerial 成为系统桌面后，可读取应用快捷操作。","Ярлыки доступны, когда Aerial выбран системным лаунчером.","Ярлики доступні, коли Aerial вибрано системним лаунчером.","Aerial жүйелік іске қосқыш болғанда қолданба таңбашалары қолжетімді."],
 ]) {
   KEYS.push(key);
   for (const [lang, value] of Object.entries({ en, zh, ru, uk, kk })) TEXTS[lang].push(value);
@@ -2500,28 +2515,6 @@ async function quickRequest(op, fields = {}, revision = state?.quickControls?.re
 }
 
 function quickSymbol(entry) {
-  if (entry.app) {
-    const img = el('img', 'qc-app-icon');
-    const appIcon = base + 'tile/' + encodeURIComponent(entry.app);
-    img.alt = ''; img.loading = 'lazy';
-    img.src = appIcon;
-    if (entry.shortcutId) {
-      const shortcutIcon = base + 'shortcut-icon?' + new URLSearchParams({app:entry.app,id:entry.shortcutId});
-      if (!state.kids?.pinSet) {
-        img.onerror = () => { img.onerror = null; img.src = appIcon; };
-        img.src = shortcutIcon;
-      } else if (kidsPin) {
-        fetch(shortcutIcon, { headers: pinHeaders() }).then(r => r.ok ? r.blob() : null).then(blob => {
-          if (!blob || !img.isConnected) return;
-          const url = URL.createObjectURL(blob);
-          img.onload = () => URL.revokeObjectURL(url);
-          img.onerror = () => { URL.revokeObjectURL(url); img.onerror = null; img.src = appIcon; };
-          img.src = url;
-        }).catch(() => {});
-      }
-    }
-    return img;
-  }
   const paths = {
     vpn: '<path d="M12 3l8 3v6c0 5-8 9-8 9s-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
     network: '<path d="M3 8a15 15 0 0 1 18 0M6 12a10 10 0 0 1 12 0M9 16a5 5 0 0 1 6 0"/><circle cx="12" cy="20" r=".8"/>',
@@ -2616,24 +2609,82 @@ async function quickCatalog() {
   const q = state.quickControls, chosen = new Set(q.items.map(c => c.key));
   openSheet(body => {
     body.append(el('h2','big',t('qc_add')));
-    for (const group of ['system','shortcuts']) {
-      const entries = catalog.entries.filter(e => e.group === group);
-      if (!entries.length) continue;
-      body.append(el('h4','',t('qc_group_' + group)));
-      const grid = el('div','qc-grid qc-catalog');
-      entries.forEach(entry => {
-        const button = quickButton(entry.title,entry,async () => {
-          if (await quickRequest('add',{key:entry.key},q.revision)) closeSheet();
-        });
-        if (chosen.has(entry.key)) {
-          button.disabled = true; button.classList.add('qc-chosen');
-          button.append(el('span','qc-check','✓')); button.setAttribute('aria-label',entry.title + ' · ' + t('qc_added'));
-        }
-        grid.append(button);
+    body.append(el('h4','',t('qc_group_system')));
+    const grid = el('div','qc-grid qc-catalog');
+    catalog.entries.forEach(entry => {
+      const button = quickButton(entry.title,entry,async () => {
+        if (await quickRequest('add',{key:entry.key},q.revision)) closeSheet();
       });
-      body.append(grid);
+      if (chosen.has(entry.key)) {
+        button.disabled = true; button.classList.add('qc-chosen');
+        button.append(el('span','qc-check','✓')); button.setAttribute('aria-label',entry.title + ' · ' + t('qc_added'));
+      }
+      grid.append(button);
+    });
+    body.append(grid);
+    const choices = el('div','list');
+    action(choices,t('qc_manual_add'),'',() => quickManual(null,q.revision));
+    body.append(choices);
+  });
+}
+
+async function quickManual(control,revision) {
+  if (quickBusy) return;
+  let details = {};
+  if (control) {
+    quickBusy = true;
+    try {
+      const result = await quickApi({op:'details',id:control.id,revision});
+      if (!result.saved) { quickError(result); return; }
+      details = result.manual;
+    } catch (_) { toast(t('toast_set_fail')); return; }
+    finally { quickBusy = false; }
+  }
+  openSheet(body => {
+    body.append(el('h2','big',t(control ? 'qc_manual_edit' : 'qc_manual_add')));
+    body.append(el('p','foot',t('qc_manual_hint')));
+    const form = el('form','list qc-manual-form');
+    function field(label, input, name, value, maxLength, required = false) {
+      const row = el('label','item field');
+      const caption = el('span','sub',t(label));
+      input.name = name;
+      input.value = value;
+      input.required = required;
+      if (maxLength) input.maxLength = maxLength;
+      input.autocomplete = 'off';
+      input.autocapitalize = 'off';
+      input.spellcheck = false;
+      row.append(caption,input);
+      form.append(row);
+      return caption;
     }
-    if (catalog.shortcutsNeedHost) body.append(el('p','foot',t('qc_shortcuts_host')));
+    const type = el('select');
+    for (const name of ['activity','broadcast']) {
+      const option = el('option','',t('qc_manual_' + name));
+      option.value = name; type.append(option);
+    }
+    field('qc_manual_type',type,'type',details.type || 'activity');
+    field('qc_manual_name',el('input'),'title',control?.title || '',64,true);
+    field('qc_manual_package',el('input'),'pkg',details.pkg || '',200,true);
+    field('qc_manual_component',el('input'),'component',details.component || '',250,true);
+    const intentAction = el('input');
+    const actionLabel = field('qc_manual_optional_action',intentAction,'action',details.action || '',250);
+    type.onchange = () => {
+      intentAction.required = type.value === 'broadcast';
+      actionLabel.textContent = t(intentAction.required ? 'qc_manual_action' : 'qc_manual_optional_action');
+    };
+    type.onchange();
+    field('qc_manual_uri',el('input'),'uri',details.uri || '',2048);
+    const extras = el('textarea'); extras.rows = 2;
+    field('qc_manual_extras',extras,'extras',details.extras === '{}' ? '' : (details.extras || ''),8192);
+    const save = el('button','item center tint',t('save')); save.type = 'submit';
+    form.append(save); body.append(form);
+    form.onsubmit = async e => {
+      e.preventDefault();
+      const args = Object.fromEntries(new FormData(form));
+      if (control) args.id = control.id;
+      if (await quickRequest(control ? 'manual-update' : 'manual-add',args,revision)) closeSheet();
+    };
   });
 }
 
@@ -2654,6 +2705,7 @@ function quickEditor(control,index) {
     };
     const choices = el('div','list');
     const command = (op,args) => async () => { if (await quickRequest(op,{id:control.id,...args},q.revision)) closeSheet(); };
+    if (control.manual) action(choices,t('qc_manual_edit'),'',() => quickManual(control,q.revision));
     action(choices,t(control.enabled ? 'qc_hide' : 'qc_show'),'',command('toggle',{on:control.enabled ? '0' : '1'}));
     if (index > 0) action(choices,t('qc_up'),'',command('place',{position:String(index - 1)}));
     if (index < q.items.length - 1) action(choices,t('qc_down'),'',command('place',{position:String(index + 1)}));

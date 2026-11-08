@@ -1,6 +1,5 @@
 package app.orchard.tv.ui.control
 
-import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,8 +8,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.BasicTextField
@@ -38,12 +35,12 @@ import app.orchard.tv.CcPage
 import app.orchard.tv.HomeViewModel
 import app.orchard.tv.Overlay
 import app.orchard.tv.R
+import app.orchard.tv.settings.ManualQuickTarget
 import app.orchard.tv.settings.QuickAction
 import app.orchard.tv.settings.QuickControls
 import app.orchard.tv.settings.QuickEdit
 import app.orchard.tv.settings.Restricted
 import app.orchard.tv.system.QuickCatalog
-import app.orchard.tv.system.LauncherQuickShortcuts
 import app.orchard.tv.ui.components.smoothBackground
 import app.orchard.tv.ui.home.MenuRow
 import app.orchard.tv.ui.theme.Glyph
@@ -60,19 +57,25 @@ internal fun QuickControlsPage(vm: HomeViewModel, takeFocus: Boolean) {
     var editingId by remember { mutableStateOf<String?>(null) }
     var renaming by remember { mutableStateOf(false) }
     var renameRevision by remember { mutableStateOf(0L) }
+    var configuring by remember { mutableStateOf(false) }
+    var manualRevision by remember { mutableStateOf(0L) }
     val editing = store.items.firstOrNull { it.id == editingId }
     val back = remember { FocusRequester() }
     fun goBack() {
         when {
+            configuring -> configuring = false
             adding -> adding = false
             renaming -> renaming = false
             editing != null -> editingId = null
             else -> vm.overlay = Overlay.ControlCenter(CcPage.Main)
         }
     }
-    BackHandler(enabled = adding || editing != null || renaming, onBack = ::goBack)
-    LaunchedEffect(takeFocus, adding, editing?.id, renaming) {
-        if (editing == null) renaming = false
+    BackHandler(enabled = configuring || adding || editing != null || renaming, onBack = ::goBack)
+    LaunchedEffect(takeFocus, adding, editing?.id, renaming, configuring) {
+        if (editing == null) {
+            renaming = false
+            if (!adding) configuring = false
+        }
         if (takeFocus) { withFrameNanos { }; runCatching { back.requestFocus() } }
     }
     fun change(edit: QuickEdit, rev: Long = store.revision, saved: () -> Unit = {}) {
@@ -89,34 +92,40 @@ internal fun QuickControlsPage(vm: HomeViewModel, takeFocus: Boolean) {
     }
     Column(Modifier.heightIn(max = 460.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
         val title = when {
+            configuring -> stringResource(if (adding) R.string.qc_manual_add else R.string.qc_manual_edit)
             adding -> stringResource(R.string.qc_add)
             renaming && editing != null -> stringResource(R.string.qc_rename)
             editing != null -> editing.title
             else -> stringResource(R.string.qc_title)
         }
         MenuRow(Glyph.ChevronLeft, title, focusRequester = back, onClick = ::goBack)
-        if (adding) {
-            val catalog by produceState<Pair<List<QuickCatalog.Entry>, Boolean>?>(null, context) {
-                value = withContext(Dispatchers.IO) {
-                    QuickCatalog.available(context) to (Build.VERSION.SDK_INT >= 25 && !LauncherQuickShortcuts.hasAccess(context))
-                }
+        if (configuring && (adding || editing != null)) {
+            ManualQuickForm(editing) { title, target ->
+                val edit = if (editing == null) QuickEdit.Add(QuickAction(title, target))
+                    else QuickEdit.Configure(editing.id, title, target)
+                change(edit, manualRevision) { configuring = false; adding = false }
+            }
+        } else if (adding) {
+            val catalog by produceState<List<QuickAction>?>(null, context) {
+                value = withContext(Dispatchers.IO) { QuickCatalog.available(context) }
             }
             val chosen = store.items.map { it.target.key }.toSet()
-            val available = catalog
-            if (available == null) BasicText(stringResource(R.string.kids_loading), style = Type.Caption)
-            else LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("system" to R.string.qc_group_system, "shortcuts" to R.string.qc_group_shortcuts).forEach { (group, label) ->
-                    val entries = available.first.filter { it.group == group }
-                    if (entries.isEmpty()) return@forEach
-                    item(key = group) { BasicText(stringResource(label), style = Type.Callout) }
-                    items(entries.chunked(3), key = { it.first().key }) { row ->
-                        QuickTileRow(row.map { it.control.tile(it.key in chosen).copy(id = it.key) }) { tile ->
-                            val entry = row.firstOrNull { it.key == tile.id } ?: return@QuickTileRow
-                            change(QuickEdit.Add(entry.control)) { adding = false }
-                        }
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                val available = catalog
+                if (available == null) BasicText(stringResource(R.string.kids_loading), style = Type.Caption)
+                else {
+                    BasicText(stringResource(R.string.qc_group_system), style = Type.Callout)
+                    QuickTileGrid(available.map { it.tile(it.target.key in chosen) }) { tile ->
+                        val entry = available.firstOrNull { it.id == tile.id } ?: return@QuickTileGrid
+                        change(QuickEdit.Add(entry)) { adding = false }
                     }
                 }
-                if (available.second) item { BasicText(stringResource(R.string.qc_shortcuts_host), style = Type.Caption) }
+                MenuRow(Glyph.Pencil, stringResource(R.string.qc_manual_add), trailing = "›", onClick = {
+                    vm.whenUnlocked {
+                        manualRevision = store.revision
+                        configuring = true
+                    }
+                })
             }
         } else if (editing != null) {
             val revision = store.revision
@@ -130,6 +139,12 @@ internal fun QuickControlsPage(vm: HomeViewModel, takeFocus: Boolean) {
                     renameRevision = revision
                     renaming = true
                 })
+                if (editing.target is ManualQuickTarget) {
+                    MenuRow(Glyph.Switches, stringResource(R.string.qc_manual_edit), trailing = "›", onClick = {
+                        manualRevision = revision
+                        configuring = true
+                    })
+                }
                 if (index > 0) MenuRow(Glyph.Move, stringResource(R.string.qc_up), onClick = {
                     change(QuickEdit.Move(editing.id, index - 1), revision)
                 })
@@ -163,10 +178,8 @@ internal fun QuickControlsPage(vm: HomeViewModel, takeFocus: Boolean) {
 @Composable
 private fun RenameQuickControl(control: QuickAction, onSave: (String) -> Unit) {
     var name by remember(control.id) { mutableStateOf(control.title) }
-    var focused by remember { mutableStateOf(false) }
     var invalid by remember { mutableStateOf(false) }
     val keyboard = LocalSoftwareKeyboardController.current
-    val color = if (focused) Palette.OnFocus else Palette.Label
     fun save() {
         val title = name.trim()
         invalid = !QuickAction.validTitle(title)
@@ -175,17 +188,69 @@ private fun RenameQuickControl(control: QuickAction, onSave: (String) -> Unit) {
             onSave(title)
         }
     }
+    QuickTextField(name, { if (it.length <= 64) { name = it; invalid = false } }, onDone = ::save)
+    if (invalid) BasicText(stringResource(R.string.qc_invalid), style = Type.Caption.copy(color = Palette.Red))
+    MenuRow(Glyph.Check, stringResource(R.string.qc_save), onClick = ::save)
+}
+
+@Composable
+private fun ManualQuickForm(control: QuickAction?, onSave: (String, ManualQuickTarget) -> Unit) {
+    val target = control?.target as? ManualQuickTarget
+    var title by remember(control?.id) { mutableStateOf(control?.title.orEmpty()) }
+    var type by remember(target) { mutableStateOf(target?.type ?: ManualQuickTarget.Type.Activity) }
+    var pkg by remember(target) { mutableStateOf(target?.pkg.orEmpty()) }
+    var component by remember(target) { mutableStateOf(target?.component.orEmpty()) }
+    var action by remember(target) { mutableStateOf(target?.action.orEmpty()) }
+    var uri by remember(target) { mutableStateOf(target?.uri.orEmpty()) }
+    var extras by remember(target) { mutableStateOf(target?.extrasJson()?.takeUnless { it == "{}" }.orEmpty()) }
+    var invalid by remember { mutableStateOf(false) }
+    val keyboard = LocalSoftwareKeyboardController.current
+    val activity = type == ManualQuickTarget.Type.Activity
+    Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        BasicText(stringResource(R.string.qc_manual_hint), style = Type.Caption)
+        MenuRow(Glyph.Switches, stringResource(R.string.qc_manual_type),
+            trailing = stringResource(if (activity) R.string.qc_manual_activity else R.string.qc_manual_broadcast),
+            onClick = { type = if (activity) ManualQuickTarget.Type.Broadcast else ManualQuickTarget.Type.Activity })
+        QuickManualField(R.string.qc_manual_name, title, 64) { title = it }
+        QuickManualField(R.string.qc_manual_package, pkg, 200) { pkg = it }
+        QuickManualField(R.string.qc_manual_component, component, 250) { component = it }
+        QuickManualField(if (activity) R.string.qc_manual_optional_action else R.string.qc_manual_action, action, 250) { action = it }
+        QuickManualField(R.string.qc_manual_uri, uri, 2048) { uri = it }
+        QuickManualField(R.string.qc_manual_extras, extras, ManualQuickTarget.MAX_EXTRAS) { extras = it }
+        if (invalid) BasicText(stringResource(R.string.qc_invalid), style = Type.Caption.copy(color = Palette.Red))
+        MenuRow(Glyph.Check, stringResource(R.string.qc_save), onClick = {
+            val result = ManualQuickTarget.create(type.code, pkg, component, action, uri, extras)
+            val name = title.trim()
+            invalid = result == null || !QuickAction.validTitle(name)
+            if (result != null && !invalid) {
+                keyboard?.hide()
+                onSave(name, result)
+            }
+        })
+    }
+}
+
+@Composable
+private fun QuickManualField(label: Int, value: String, limit: Int, onChange: (String) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        BasicText(stringResource(label), style = Type.Caption)
+        QuickTextField(value, { if (it.length <= limit) onChange(it) })
+    }
+}
+
+@Composable
+private fun QuickTextField(value: String, onChange: (String) -> Unit, onDone: (() -> Unit)? = null) {
+    var focused by remember { mutableStateOf(false) }
+    val color = if (focused) Palette.OnFocus else Palette.Label
     BasicTextField(
-        value = name,
-        onValueChange = { if (it.length <= 64) { name = it; invalid = false } },
+        value = value,
+        onValueChange = onChange,
         modifier = Modifier.fillMaxWidth().onFocusChanged { focused = it.isFocused }
             .smoothBackground(if (focused) Palette.Focus else Palette.Fill, 12.dp).padding(horizontal = 14.dp, vertical = 12.dp),
         textStyle = Type.Body.copy(color = color),
         cursorBrush = SolidColor(color),
         singleLine = true,
-        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        keyboardActions = KeyboardActions(onDone = { save() }),
+        keyboardOptions = KeyboardOptions(imeAction = if (onDone == null) ImeAction.Next else ImeAction.Done),
+        keyboardActions = if (onDone == null) KeyboardActions.Default else KeyboardActions(onDone = { onDone() }),
     )
-    if (invalid) BasicText(stringResource(R.string.qc_invalid), style = Type.Caption.copy(color = Palette.Red))
-    MenuRow(Glyph.Check, stringResource(R.string.qc_save), onClick = ::save)
 }

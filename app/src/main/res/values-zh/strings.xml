@@ -339,12 +339,23 @@
     <string name="qc_network_settings">网络设置</string>
     <string name="qc_bluetooth_settings">蓝牙设置</string>
     <string name="qc_group_system">可用控制</string>
+    <string name="qc_manual_add">手动添加操作</string>
+    <string name="qc_manual_edit">编辑操作</string>
+    <string name="qc_manual_type">操作类型</string>
+    <string name="qc_manual_activity">打开界面（Activity）</string>
+    <string name="qc_manual_broadcast">发送广播</string>
+    <string name="qc_manual_name">按钮名称</string>
+    <string name="qc_manual_package">应用包名</string>
+    <string name="qc_manual_component">组件类名</string>
+    <string name="qc_manual_action">Intent 动作</string>
+    <string name="qc_manual_optional_action">Intent 动作（选填）</string>
+    <string name="qc_manual_uri">数据 URI（选填）</string>
+    <string name="qc_manual_extras">附加参数（JSON，选填）</string>
+    <string name="qc_manual_hint">从应用文档复制公开入口。类名以 . 开头时会自动补全包名。附加参数的值可以是字符串、数字或布尔值。</string>
     <string name="qc_clash_toggle">切换</string>
     <string name="qc_arrange_hint">选择图标可改名、移动、隐藏或移除。</string>
     <string name="qc_rename">改名</string>
     <string name="qc_remove">移除</string>
     <string name="qc_exists">已添加此控制。</string>
     <string name="qc_mute">静音</string>
-    <string name="qc_group_shortcuts">应用快捷操作</string>
-    <string name="qc_shortcuts_host">Aerial 成为系统桌面后，可读取应用快捷操作。</string>
 </resources>
