@@ -7,6 +7,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
 import android.util.Log
+import app.orchard.tv.BuildConfig
 import androidx.core.content.getSystemService
 import app.orchard.tv.apps.AppCatalog
 import app.orchard.tv.apps.FOLDER_KEY_PREFIX
@@ -610,7 +611,7 @@ class PhoneServer private constructor(private val context: Context, private val 
     private fun text(status: Response.Status, msg: String) = newFixedLengthResponse(status, "text/plain; charset=utf-8", msg)
 
     companion object {
-        const val PORT = 8790
+        val PORT = if (BuildConfig.APPLICATION_ID.endsWith(".shortcuts")) 8791 else 8790
         private const val TAG = "AerialPhone"
         /** Enough for a batch of phone photos at full size. */
         private const val MAX_UPLOAD = 200L * 1024 * 1024
